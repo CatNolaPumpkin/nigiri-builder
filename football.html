@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Flag Football Academy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Fredoka:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Flag Football Academy: Friday-night stadium green with team red/blue flags. Single theme by choice. */
+:root{--bg:#173d22;--fg:#f3fbef;--panel:#21522f;--panel-2:#2b663b;--card:#f6fbf3;--card-ink:#12301b;--accent:#ffd35a;--on-accent:#2b2000;--muted:#55705c;
+  --grass:#3f8f47;--grass-2:#37803f;--off:#e4572e;--def:#2f6fd6}
+.field svg{width:100%;height:auto;display:block}
+.hotspot.on .hs-ring{stroke:var(--gold);stroke-width:5}
+.routes{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:720px){.routes{grid-template-columns:1fr}}
+.routebox{background:var(--grass);border-radius:14px;padding:6px;max-width:300px;width:100%;justify-self:center}
+.routebox svg{width:100%;height:auto;display:block}
+.rbtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.rbtns button{padding:9px 6px;font-size:15px}
+.rbtns button[aria-pressed="true"]{background:var(--accent);outline:3px solid var(--gold);outline-offset:-3px}
+.sim{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.sim{grid-template-columns:1fr}}
+.simfield{background:var(--grass);border-radius:14px;overflow:hidden;max-width:400px;width:100%;justify-self:center;position:relative}
+.simfield svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.board{display:flex;gap:8px;flex-wrap:wrap}
+.clockbar{height:12px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden}
+.clockbar i{display:block;height:100%;background:var(--accent);width:100%}
+.clockbar.late i{background:#ff6b6b}
+.plays{display:grid;gap:8px}
+.plays button{text-align:left;line-height:1.25}
+.plays button small{display:block;font-weight:400;font-size:13px;opacity:.75}
+.plays button[aria-pressed="true"]{background:var(--accent);outline:3px solid var(--gold);outline-offset:-3px}
+.throws{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.throws button{border:4px solid transparent;font-size:16px}
+.throws button.o-green{border-color:#2f9e5b}.throws button.o-yellow{border-color:#e8b400}.throws button.o-red{border-color:#d1495b}
+.throws button small{display:block;font-weight:400;font-size:12px}
+.msg{background:var(--card);color:var(--card-ink);border-radius:12px;padding:10px 12px;min-height:48px}
+.msg b.big{font-family:var(--display);font-weight:400;font-size:20px;display:block}
+.legend{font-size:13px;opacity:.85;display:flex;gap:12px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+.player-lbl{font-family:Fredoka,sans-serif;font-weight:700;font-size:9px;fill:#fff;text-anchor:middle;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="game-head">
+    <h1>Flag Football Academy<small>Think like a quarterback</small></h1>
+    <div class="chips"><div class="chip">Touchdowns <b id="tdCount">0</b></div></div>
+  </header>
+
+  <nav class="sub" aria-label="Flag football lessons">
+    <button data-tab="field">1 · The field</button>
+    <button data-tab="rules">2 · Rules</button>
+    <button data-tab="positions">3 · Positions</button>
+    <button data-tab="routes">4 · Route tree</button>
+    <button data-tab="qb">5 · Play QB!</button>
+    <button data-tab="quiz">6 · Quiz</button>
+  </nav>
+
+  <!-- 1. Field -->
+  <section data-panel="field">
+    <p class="lead">Flag football is usually played 5 on 5 on a smaller field than tackle football. A common youth field (NFL FLAG) is about 30 yards wide and 70 yards long, with two 10-yard end zones. Leagues can vary a little. Tap the parts of the field.</p>
+    <div class="panel field" id="fieldBox"></div>
+    <div class="card info" id="fieldInfo" aria-live="polite"><h3>Tap a part of the field</h3><p>The lines tell you where you need to get.</p></div>
+  </section>
+
+  <!-- 2. Rules -->
+  <section data-panel="rules">
+    <p class="lead">These are the official NFL FLAG rules most youth leagues use. Your league might change a few, so always listen to your coach and the ref.</p>
+    <div class="cards">
+      <div class="card"><h3>No contact</h3><p>No tackling, blocking or pushing. Instead of a tackle, you <b>pull a flag</b> off the ball carrier's belt. Flag pulled = play over.</p></div>
+      <div class="card"><h3>Downs</h3><p>Your team starts on its own 5-yard line. You get <b>4 downs</b> (tries) to cross midfield. Once you cross, you get <b>3 downs</b> to score a touchdown. Don't make it? The other team gets the ball.</p></div>
+      <div class="card"><h3>The quarterback</h3><ul><li>The QB has <b>7 seconds</b> to throw (the pass clock)</li><li>The QB <b>can't run</b> with the ball past the line, unless they hand it off first and get it back</li><li>Only <b>one forward pass</b> per play</li></ul></div>
+      <div class="card"><h3>Rushing the QB</h3><p>Defenders can rush the quarterback only if they start <b>7 yards</b> back from the line of scrimmage (the "rush line"). If the ball is handed off, anyone can rush.</p></div>
+      <div class="card"><h3>No-run zones</h3><p>5 yards before each end zone and 5 yards on each side of midfield. Inside them you <b>must pass</b> to get a first down or a touchdown. No handoffs or runs!</p></div>
+      <div class="card"><h3>Scoring</h3><ul><li><b>Touchdown:</b> 6 points</li><li><b>Extra point:</b> after a TD, try for 1 point from the 5-yard line (pass only) or 2 points from the 10</li><li><b>Safety:</b> 2 points for the defense if the ball carrier is stopped in their own end zone</li><li><b>Interceptions</b> can be run back for a score</li></ul></div>
+      <div class="card"><h3>Flag guarding</h3><p>It's <b>illegal</b> to protect your flags with your hand, arm or the ball: no stiff-arms, no lowering your elbow, no covering your belt. That's a penalty.</p></div>
+      <div class="card"><h3>Good sports</h3><ul><li>Everyone on offense can catch a pass</li><li>Shirts tucked in so the flags hang free</li><li>Shake hands after every game</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 3. Positions -->
+  <section data-panel="positions">
+    <div class="routes">
+      <div class="routebox" id="formBox"></div>
+      <div class="card info" id="formInfo" aria-live="polite"><h3>Tap a player</h3><p>Red is the offense (has the ball). Blue is the defense.</p></div>
+    </div>
+    <div class="cards">
+      <div class="card"><h3>Man-to-man defense</h3><p>Each defender sticks to one receiver wherever they go. Look for defenders lined up right across from receivers. <b>Beat it with</b> quick cuts: slants, outs, crossing routes.</p></div>
+      <div class="card"><h3>Zone defense</h3><p>Each defender guards an <b>area</b>, not a person. Look for defenders spread out, away from receivers. <b>Beat it with</b> routes that stop in the empty spaces (curls) or flood one area with two receivers.</p></div>
+    </div>
+  </section>
+
+  <!-- 4. Routes -->
+  <section data-panel="routes">
+    <p class="lead">Receivers run planned paths called <b>routes</b>. Together they make the "route tree." Tap a route to watch a receiver run it.</p>
+    <div class="routes">
+      <div class="routebox" id="routeBox"></div>
+      <div style="display:grid;gap:10px;align-content:start">
+        <div class="rbtns" id="routeBtns"></div>
+        <div class="card info" id="routeInfo" aria-live="polite"><h3>Pick a route</h3><p>Every route has a job.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. QB sim -->
+  <section data-panel="qb">
+    <div class="sim">
+      <div style="display:grid;gap:8px">
+        <div class="simfield"><svg id="simSvg" viewBox="0 0 360 384" aria-label="Play field"></svg></div>
+        <div class="clockbar" id="clockbar" aria-hidden="true"><i id="clockfill"></i></div>
+        <div class="legend"><span><i style="background:#e4572e"></i>Your team</span><span><i style="background:#2f6fd6"></i>Defense</span><span><i style="background:#ffd35a"></i>Line to gain</span><span>Ring = how open</span></div>
+      </div>
+      <div style="display:grid;gap:12px;align-content:start">
+        <div class="board"><div class="chip" id="downChip">1st down</div><div class="chip">Ball on <b id="spotChip">5</b></div><div class="chip">Points <b id="ptsChip">0</b></div></div>
+        <div class="msg" id="msg" aria-live="polite"></div>
+        <div id="controls" style="display:grid;gap:10px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Quiz -->
+  <section data-panel="quiz"><div class="panel" id="quizBox"></div></section>
+  <footer>Made with love for Lennox</footer>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/* ---------- 1. Field (10 px = 1 yard) ---------- */
+(function(){
+  let s=`<svg viewBox="-10 -10 720 340" role="img" aria-label="Flag football field">
+  <defs><pattern id="nr" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="none"/><line x1="0" y1="0" x2="0" y2="10" stroke="#ffd35a" stroke-width="4" opacity=".5"/></pattern></defs>
+  <rect x="0" y="0" width="700" height="300" fill="#3f8f47"/>`;
+  for(let i=0;i<10;i++)s+=`<rect x="${100+i*50}" y="0" width="25" height="300" fill="#37803f"/>`;
+  s+=`<g class="hotspot" data-k="endzone"><rect class="hs-ring" x="0" y="0" width="100" height="300" fill="#e4572e" opacity=".85" stroke="none"/><rect x="600" y="0" width="100" height="300" fill="#2f6fd6" opacity=".85"/></g>
+  <g class="hotspot" data-k="norun"><rect class="hs-ring" x="100" y="0" width="50" height="300" fill="url(#nr)" stroke="none"/><rect x="550" y="0" width="50" height="300" fill="url(#nr)"/><rect x="300" y="0" width="100" height="300" fill="url(#nr)"/></g>
+  <g stroke="#fff" stroke-width="2" opacity=".75">${[150,200,250,300,400,450,500,550].map(x=>`<line x1="${x}" y1="0" x2="${x}" y2="300"/>`).join("")}</g>
+  <g class="hotspot" data-k="goal"><line class="hs-ring" x1="100" y1="0" x2="100" y2="300" stroke="#fff" stroke-width="6"/><line x1="600" y1="0" x2="600" y2="300" stroke="#fff" stroke-width="6"/><rect x="88" y="0" width="24" height="300" fill="transparent"/><rect x="588" y="0" width="24" height="300" fill="transparent"/></g>
+  <g class="hotspot" data-k="mid"><line class="hs-ring" x1="350" y1="0" x2="350" y2="300" stroke="#fff" stroke-width="6"/><rect x="338" y="0" width="24" height="300" fill="transparent"/></g>
+  <g class="hotspot" data-k="start"><circle class="hs-ring" cx="150" cy="150" r="14" fill="#ffd35a" stroke="#fff" stroke-width="3"/></g>
+  <rect x="0" y="0" width="700" height="300" fill="none" stroke="#fff" stroke-width="5"/>
+  <g font-family="Fredoka,sans-serif" font-weight="600" font-size="22" fill="#fff" text-anchor="middle" pointer-events="none">
+    <text x="50" y="158" transform="rotate(-90 50 150)">END ZONE</text><text x="650" y="158" transform="rotate(90 650 150)">END ZONE</text>
+    <text x="350" y="-14" font-size="16">MIDFIELD</text><text x="150" y="190" font-size="15">start (own 5)</text>
+    <text x="225" y="320" font-size="16">← 4 downs to cross midfield</text><text x="475" y="320" font-size="16">3 downs to score →</text></g>
+  </svg>`;
+  document.getElementById("fieldBox").innerHTML=s;
+  LG.hotspots(document.getElementById("fieldBox"),{
+    endzone:{t:"End zones",d:"10 yards deep at each end. Carry or catch the ball in the other team's end zone for a touchdown: 6 points!"},
+    goal:{t:"Goal lines",d:"The front edge of each end zone. The ball has to break this line for a touchdown."},
+    mid:{t:"Midfield",d:"The middle of the field. Your first goal on every drive is to cross it within 4 downs. Then you get 3 downs to score."},
+    norun:{t:"No-run zones",d:"The striped areas: 5 yards before each end zone and 5 yards on each side of midfield. In here you have to pass to get a first down or touchdown. Runs and handoffs aren't allowed."},
+    start:{t:"Starting spot",d:"Every drive starts on your own 5-yard line. That's 45 yards from the other end zone."}
+  },document.getElementById("fieldInfo"));
+})();
+
+/* ---------- 3. Positions ---------- */
+(function(){
+  const P=[["QB","off",150,330,"Quarterback (QB)","The leader of the offense. Takes the snap, reads the defense, and throws or hands off within 7 seconds. In flag, the QB can't run past the line unless the ball was handed off first."],
+    ["C","off",150,290,"Center","Snaps (hikes) the ball to the QB between their legs, then runs out to be a receiver. Yes, the center can catch passes!"],
+    ["WR","off",30,290,"Wide receiver","Lines up wide near the sideline. Runs routes, gets open, catches passes. Speed and sharp cuts are key."],
+    ["WR","off",270,290,"Wide receiver","The other wide receiver. Two wide receivers stretch the defense across the whole field."],
+    ["S","off",90,300,"Slot receiver / runner","Lines up between the center and a wide receiver. Can run short routes or take a handoff."],
+    ["R","def",150,206,"Rusher","Starts 7 yards back (on the rush line) and chases the QB to pull a flag before the pass. Only one rusher is typical."],
+    ["CB","def",30,250,"Cornerback","Covers a wide receiver. Watches the receiver's hips to know where they're going."],
+    ["CB","def",270,250,"Cornerback","Covers the other wide receiver."],
+    ["LB","def",90,240,"Linebacker","Guards the short middle. Watches for short passes and runs."],
+    ["S","def",150,150,"Safety","The last line of defense. Plays deep to stop long passes and pull flags if anyone breaks free."]];
+  let s=`<svg viewBox="0 0 300 360" role="img" aria-label="Offense and defense lined up"><rect width="300" height="360" fill="#3f8f47"/>
+    <line x1="0" y1="280" x2="300" y2="280" stroke="#4e8de8" stroke-width="3"/><text x="296" y="274" text-anchor="end" font-size="11" fill="#fff" font-family="Fredoka">line of scrimmage</text>
+    <line x1="0" y1="196" x2="300" y2="196" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="6 5"/><text x="296" y="190" text-anchor="end" font-size="11" fill="#fff" font-family="Fredoka">rush line (7 yards)</text>`;
+  P.forEach((p,i)=>s+=`<g class="hotspot" data-k="${i}"><circle class="hs-ring" cx="${p[2]}" cy="${p[3]}" r="14" fill="${p[1]==="off"?"#e4572e":"#2f6fd6"}" stroke="#fff" stroke-width="2.5"/><text x="${p[2]}" y="${p[3]+4}" font-size="11" class="player-lbl" style="font-size:11px">${p[0]}</text></g>`);
+  document.getElementById("formBox").innerHTML=s+`</svg>`;
+  const info={};P.forEach((p,i)=>info[i]={t:p[4],d:p[5]});
+  LG.hotspots(document.getElementById("formBox"),info,document.getElementById("formInfo"));
+})();
+
+/* ---------- Routes (waypoints in yards from the start; +x = toward the middle of the field, +y = downfield) ---------- */
+const ROUTES={
+  flat:{n:"Flat",p:[[-1,2],[-10,3]],d:"A quick route straight toward the sideline, close to the line. An easy, safe throw.",use:"Great when defenders are playing deep."},
+  slant:{n:"Slant",p:[[0,3],[12,13]],d:"3 steps up, then cut sharply on a diagonal toward the middle.",use:"The best quick route against man coverage: you cut in front of your defender."},
+  out:{n:"Out",p:[[0,6],[-10,6]],d:"Run 6 yards, plant your foot and cut straight to the sideline.",use:"Good for first downs near the sideline. Catch it and get out of bounds or turn upfield."},
+  in:{n:"In (dig)",p:[[0,6],[13,6]],d:"Run 6 yards, then cut straight across the middle.",use:"Finds open space in the middle, especially against zone."},
+  hitch:{n:"Hitch",p:[[0,5],[0,4]],d:"Run 5 yards, stop, and turn back to face the QB.",use:"Perfect when your defender is backing up a lot."},
+  curl:{n:"Curl",p:[[0,7],[1.5,5.5]],d:"Run 7 yards, then curl back toward the QB and sit in the open spot.",use:"Beats zone: stop in the hole between defenders."},
+  comeback:{n:"Comeback",p:[[0,10],[-3,8]],d:"Run hard 10 yards like you're going deep, then come back toward the sideline.",use:"Your defender backs up fearing a deep ball; you stop and come back."},
+  post:{n:"Post",p:[[0,8],[9,19]],d:"Run 8 yards, then angle toward the middle of the field (where the goalposts would be).",use:"A deep shot over the middle when the safety is out of position."},
+  corner:{n:"Corner",p:[[0,8],[-9,17]],d:"Run 8 yards, then angle toward the back corner of the end zone.",use:"A deep shot toward the sideline. Hard to defend near the end zone."},
+  go:{n:"Go (fly)",p:[[0,22]],d:"Run straight down the field as fast as you can.",use:"Beats defenders who play too close. Even if it's not thrown, it pulls defenders deep."},
+  drag:{n:"Drag",p:[[0,2],[16,3]],d:"A shallow route that runs all the way across the field just past the line.",use:"Defenders often lose you in traffic. Great against man."}
+};
+function routePoint(start,route,dist,mirror){
+  let x=start[0],y=start[1],left=dist;
+  for(const [dx,dy] of route){const tx=start[0]+(mirror?-dx:dx),ty=start[1]+dy;const L=Math.hypot(tx-x,ty-y);
+    if(left<=L){return[x+(tx-x)*left/L,y+(ty-y)*left/L]}left-=L;x=tx;y=ty}
+  return[x,y];
+}
+(function(){
+  const S=12,ox=60,oy=330; // px per yard, start at (ox,oy), +x right(toward middle), up = downfield
+  const toPx=([x,y])=>[ox+x*S,oy-y*S];
+  let s=`<svg viewBox="0 0 300 360" aria-hidden="true"><rect width="300" height="360" fill="#3f8f47"/>`;
+  for(let y=0;y<=25;y+=5)s+=`<line x1="0" y1="${oy-y*S}" x2="300" y2="${oy-y*S}" stroke="#fff" stroke-width="${y?1.5:3}" opacity="${y?.45:.9}"/>`;
+  s+=`<line x1="4" y1="0" x2="4" y2="360" stroke="#fff" stroke-width="4"/><text x="10" y="352" font-size="11" fill="#fff" font-family="Fredoka">sideline</text><text x="296" y="${oy-4}" text-anchor="end" font-size="11" fill="#fff" font-family="Fredoka">line of scrimmage</text>
+    <path id="rpath" d="" fill="none" stroke="#ffd35a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g id="rdot"><circle r="10" fill="#e4572e" stroke="#fff" stroke-width="2.5"/><text y="4" class="player-lbl" style="font-size:10px">WR</text></g></svg>`;
+  document.getElementById("routeBox").innerHTML=s;
+  const dot=document.getElementById("rdot"),path=document.getElementById("rpath");
+  dot.setAttribute("transform",`translate(${ox},${oy})`);
+  let raf;
+  document.getElementById("routeBtns").innerHTML=Object.entries(ROUTES).map(([k,r])=>`<button type="button" data-k="${k}" aria-pressed="false">${r.n}</button>`).join("");
+  document.querySelectorAll("#routeBtns button").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.k,R=ROUTES[k];LG.click();
+    document.querySelectorAll("#routeBtns button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    const pts=[[0,0],...R.p].map(toPx);path.setAttribute("d","M"+pts.map(p=>p.join(" ")).join(" L"));
+    const len=path.getTotalLength();path.style.strokeDasharray=len;path.style.strokeDashoffset=len;
+    document.getElementById("routeInfo").innerHTML=`<h3>${R.n}</h3><p>${R.d}</p><p class="tip"><b>When to use it:</b> ${R.use}</p>`;
+    cancelAnimationFrame(raf);const t0=performance.now(),dur=LG.reduce()?1:Math.max(1200,len*6);
+    const step=now=>{const f=Math.min(1,(now-t0)/dur);const p=path.getPointAtLength(f*len);dot.setAttribute("transform",`translate(${p.x},${p.y})`);path.style.strokeDashoffset=len*(1-f);if(f<1)raf=requestAnimationFrame(step)};
+    raf=requestAnimationFrame(step);
+  });
+})();
+
+/* ---------- 5. QB simulator ---------- */
+const PX=12,VIEW_BEHIND=10,VIEW_AHEAD=22; // view: 30 yards wide, 32 yards tall
+const OFF0={WRL:[3,0],SL:[9,-1],C:[15,0],WRR:[27,0],QB:[15,-5]};
+const PLAYS={
+  slantflat:{n:"Slant-Flat",s:"Quick throws. Best vs. man coverage.",r:{WRL:"slant",SL:"flat",C:"hitch",WRR:"slant"},beats:"man"},
+  curlflat:{n:"Curl-Flat",s:"Sit in the holes. Best vs. zone.",r:{WRL:"curl",SL:"flat",C:"hitch",WRR:"curl"},beats:"zone"},
+  verts:{n:"Four Verticals",s:"Everyone goes deep. Stretches a zone.",r:{WRL:"go",SL:"go",C:"drag",WRR:"go"},beats:"zone"},
+  postcorner:{n:"Post-Corner",s:"Two deep cuts plus a drag underneath.",r:{WRL:"post",SL:"out",C:"drag",WRR:"corner"},beats:"man"},
+  sweep:{n:"Jet Sweep (run)",s:"Hand off to the slot running to the right.",run:true,beats:"both"}
+};
+const NAMES={WRL:"Left WR",SL:"Slot",C:"Center",WRR:"Right WR"};
+const G={spot:5,down:1,crossed:false,pts:0,tds:LG.store.get("ff-tds",0),pat:null,phase:"call",play:null,cov:null,raf:0};
+document.getElementById("tdCount").textContent=G.tds;
+const svg=document.getElementById("simSvg");
+const sx=x=>x*PX,sy=y=>(VIEW_AHEAD-y)*PX;
+const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+function defLook(cov){
+  return cov==="man"?{CBL:[3,4],LB:[9,4],S:[15,5],CBR:[27,4],R:[15,7]}:{CBL:[6,5],LB:[15,6],S:[15,13],CBR:[24,5],R:[15,7]};
+}
+const ZONE={CBL:[5,6],LB:[15,7],S:[15,15],CBR:[25,6]};
+const MAN={CBL:"WRL",LB:"SL",S:"C",CBR:"WRR"};
+function noRun(spot){return(!G.crossed&&spot>=20&&spot<25)||spot>=45}
+function lineToGain(){return G.crossed?50:25}
+
+function drawField(){
+  const A=y=>G.spot+y; // absolute yard
+  let s=`<rect width="360" height="384" fill="#3f8f47"/>`;
+  for(let y=-VIEW_BEHIND;y<=VIEW_AHEAD;y++){const a=A(y);if(a%10===0&&a>0&&a<50)s+=`<rect x="0" y="${sy(y+5)}" width="360" height="${5*PX}" fill="#37803f"/>`}
+  // your own end zone (behind you)
+  if(G.spot<VIEW_BEHIND)s+=`<rect x="0" y="${sy(-G.spot)}" width="360" height="${(VIEW_BEHIND-G.spot)*PX}" fill="#e4572e" opacity=".55"/><text x="180" y="${Math.min(378,sy(-G.spot)+20)}" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="13" fill="#fff">YOUR END ZONE</text>`;
+  // end zone
+  const gl=50-G.spot;if(gl<=VIEW_AHEAD)s+=`<rect x="0" y="0" width="360" height="${sy(gl)}" fill="#2f6fd6" opacity=".7"/><text x="180" y="${Math.max(18,sy(gl)-10)}" text-anchor="middle" font-family="Mochiy Pop One,Fredoka" font-size="18" fill="#fff">END ZONE</text>`;
+  // no-run zones
+  const nrz=G.crossed?[[45,50]]:[[20,25],[45,50]];
+  nrz.forEach(([a,b])=>{const y1=a-G.spot,y2=b-G.spot;if(y2>-VIEW_BEHIND&&y1<VIEW_AHEAD)s+=`<rect x="0" y="${sy(y2)}" width="360" height="${(y2-y1)*PX}" fill="#ffd35a" opacity=".13"/><text x="356" y="${sy(y2)+14}" text-anchor="end" font-size="11" fill="#ffd35a" font-family="Fredoka" font-weight="600">NO-RUN ZONE</text>`});
+  for(let y=-VIEW_BEHIND;y<=VIEW_AHEAD;y++){const a=A(y);if(a%5===0&&a>=0&&a<=50){s+=`<line x1="0" y1="${sy(y)}" x2="360" y2="${sy(y)}" stroke="#fff" stroke-width="${a===25||a===50||a===0?3:1.4}" opacity=".7"/>`;
+    if(a%10===0||a===25)s+=`<text x="6" y="${sy(y)-3}" font-size="10" fill="#fff" font-family="Fredoka" opacity=".9">${a===25?"MID":a===50?"GOAL":a<25?"own "+a:"opp "+(50-a)}</text>`}}
+  const ltg=lineToGain()-G.spot;if(ltg<=VIEW_AHEAD&&ltg!==50-G.spot)s+=`<line x1="0" y1="${sy(ltg)}" x2="360" y2="${sy(ltg)}" stroke="#ffd35a" stroke-width="3"/>`;
+  s+=`<line x1="0" y1="${sy(0)}" x2="360" y2="${sy(0)}" stroke="#4e8de8" stroke-width="3"/>`;
+  s+=`<line x1="0" y1="${sy(7)}" x2="360" y2="${sy(7)}" stroke="#ff6b6b" stroke-width="1.5" stroke-dasharray="6 5" opacity=".8"/>`;
+  s+=`<g id="routesG"></g><g id="playersG"></g><g id="ballG"><ellipse rx="5" ry="3.4" fill="#8b4a2b" stroke="#fff" stroke-width="1"/></g><g id="fxG"></g>`;
+  svg.innerHTML=s;
+}
+function player(id,pos,team,lbl){
+  const c=team==="off"?"#e4572e":"#2f6fd6",tgt=team==="off"&&id!=="QB";
+  return `<g data-id="${id}" transform="translate(${sx(pos[0])},${sy(pos[1])})" ${tgt?`class="tgt" style="cursor:pointer"`:""}>
+    ${tgt?`<circle r="22" fill="transparent"/><circle class="ring" r="17" fill="none" stroke="none" stroke-width="4"/>`:""}<circle r="11" fill="${c}" stroke="#fff" stroke-width="2"/>
+    <text y="3.5" class="player-lbl">${lbl}</text></g>`;
+}
+const LBL={WRL:"WR",SL:"S",C:"C",WRR:"WR",QB:"QB",CBL:"CB",CBR:"CB",LB:"LB",S:"S",R:"R"};
+function renderPlayers(){
+  const st=G.st,pg=document.getElementById("playersG");
+  if(!pg.childElementCount){let h="";for(const k of ["CBL","LB","S","CBR","R"])h+=player(k,st.d[k],"def",LBL[k]);for(const k of ["WRL","SL","C","WRR","QB"])h+=player(k,st.o[k],"off",LBL[k]);pg.innerHTML=h}
+  pg.querySelectorAll("[data-id]").forEach(g=>{const id=g.dataset.id,pos=(id in st.o?st.o:st.d)[id];g.setAttribute("transform",`translate(${sx(pos[0])},${sy(pos[1])})`);
+    const ring=g.querySelector(".ring");if(ring){let c="none";if(G.phase==="live"&&!G.play.run&&!G.thrown&&!st.carrier){const o=openness(id);c=o>=3?"#2f9e5b":o>=1.8?"#e8b400":"#d1495b"}ring.setAttribute("stroke",c)}});
+  const b=st.ball;document.getElementById("ballG").setAttribute("transform",`translate(${sx(b[0])},${sy(b[1])})`);
+  if(G.phase==="live"&&!G.thrown&&!st.carrier)document.querySelectorAll(".throws button").forEach(b=>{const o=openness(b.dataset.k);b.className=o>=3?"o-green":o>=1.8?"o-yellow":"o-red"});
+}
+function openness(k){const p=G.st.o[k];let m=99;for(const d of ["CBL","LB","S","CBR"])m=Math.min(m,dist(p,G.st.d[d]));return m}
+
+function setup(){
+  G.cov=Math.random()<.5?"man":"zone";
+  const d=defLook(G.cov),o={};for(const k in OFF0)o[k]=[...OFF0[k]];
+  G.st={o,d:{...d},ball:[15,0],t:0,hist:[],carrier:null};
+  for(const k in G.st.d)G.st.d[k]=[...G.st.d[k]];
+  G.play=null;G.phase="call";drawField();renderPlayers();updateBoard();
+  document.getElementById("clockfill").style.width="100%";document.getElementById("clockbar").classList.remove("late");
+  const nr=noRun(G.spot)||G.pat;
+  msg(G.pat?`<b class="big">Extra point try: ${G.pat} point${G.pat>1?"s":""}</b>One play from the ${G.pat===1?5:10}. ${G.pat===1?"You're in the no-run zone, so you must pass.":"Run or pass, your call."}`:
+    `<b class="big">Read the defense</b>Are the blue defenders lined up right across from your receivers (<b>man</b>), or spread out in areas (<b>zone</b>)? Then pick a play.${nr&&!G.pat?` <b>You're in a no-run zone: pass only!</b>`:""}`);
+  const btns=Object.entries(PLAYS).map(([k,p])=>{const dis=p.run&&(noRun(G.spot)||G.pat===1);
+    return `<button type="button" data-k="${k}" ${dis?"disabled":""}>${p.n}<small>${dis?"Not allowed in a no-run zone":p.s}</small></button>`}).join("");
+  controls(`<div class="plays">${btns}</div><button type="button" class="primary big" id="hike" disabled>Hike!</button>`);
+  document.querySelectorAll(".plays button").forEach(b=>b.onclick=()=>{LG.click();G.play=PLAYS[b.dataset.k];G.playKey=b.dataset.k;
+    document.querySelectorAll(".plays button").forEach(x=>x.setAttribute("aria-pressed",x===b));document.getElementById("hike").disabled=false;drawRoutes()});
+  document.getElementById("hike").onclick=hike;
+}
+function drawRoutes(){
+  let s="";
+  if(G.play.run){s=`<path d="M${sx(9)} ${sy(-1)} L${sx(12)} ${sy(-4)} L${sx(23)} ${sy(-4)} L${sx(26)} ${sy(2)} L${sx(26)} ${sy(14)}" fill="none" stroke="#ffd35a" stroke-width="3" stroke-dasharray="5 4" opacity=".85"/>`}
+  else for(const k in G.play.r){const R=ROUTES[G.play.r[k]].p,st=OFF0[k],m=k==="WRR";
+    s+=`<path d="M${sx(st[0])} ${sy(st[1])} ${R.map(([dx,dy])=>`L${sx(st[0]+(m?-dx:dx))} ${sy(st[1]+dy)}`).join(" ")}" fill="none" stroke="#ffd35a" stroke-width="2.5" stroke-dasharray="5 4" opacity=".85"/>`}
+  document.getElementById("routesG").innerHTML=s;
+}
+function controls(h){document.getElementById("controls").innerHTML=h}
+function msg(h){document.getElementById("msg").innerHTML=h}
+function updateBoard(){
+  const ord=["","1st","2nd","3rd","4th"][G.down]||G.down+"th";const allowed=G.crossed?3:4;
+  document.getElementById("downChip").textContent=G.pat?"Extra point":`${ord} down · ${allowed-G.down+1} left`;
+  const s=G.spot;document.getElementById("spotChip").textContent=s===25?"midfield":s<25?`own ${s}`:`opp ${50-s}`;
+  document.getElementById("ptsChip").textContent=G.pts;
+}
+function hike(){
+  if(!G.play)return;LG.tone(200,.08,"square",.08);
+  G.phase="live";G.st.t=0;G.st.hist=[];G.thrown=false;G.ballFlight=null;G.st.carrier=null;G.st.ball=[...G.st.o.QB];
+  // zone defenders drop to their spots
+  if(G.play.run){G.st.handed=false}
+  msg(G.play.run?"<b class='big'>Hike!</b>Watch the handoff…":"<b class='big'>Hike!</b>Tap a receiver (or a button) to throw. Green ring = open!");
+  const keys=["WRL","SL","C","WRR"];
+  controls(G.play.run?"":`<div class="throws">${keys.map(k=>`<button type="button" data-k="${k}">${NAMES[k]}<small>${ROUTES[G.play.r[k]].n}</small></button>`).join("")}</div>`);
+  document.querySelectorAll(".throws button").forEach(b=>b.onclick=()=>throwTo(b.dataset.k));
+  svg.onclick=e=>{const g=e.target.closest(".tgt");if(g)throwTo(g.dataset.id)};
+  let last=performance.now();
+  const loop=now=>{const dt=Math.min(.05,(now-last)/1000);last=now;if(step(dt))G.raf=requestAnimationFrame(loop)};
+  G.raf=requestAnimationFrame(loop);
+}
+const SPD=6.2,DSPD=5.7,RSPD=3.2,CSPD=5.2; // CSPD: ball carrier after the catch (slower than pursuit, so flags get pulled)
+function moveToward(p,t,sp,dt){const d=dist(p,t);if(d<1e-3)return;const m=Math.min(d,sp*dt);p[0]+=(t[0]-p[0])/d*m;p[1]+=(t[1]-p[1])/d*m}
+function lagPos(k,lag){const h=G.st.hist;for(let i=h.length-1;i>=0;i--)if(h[i].t<=G.st.t-lag)return h[i].o[k];return OFF0[k]}
+function step(dt){
+  const st=G.st;st.t+=dt;
+  st.hist.push({t:st.t,o:Object.fromEntries(Object.entries(st.o).map(([k,v])=>[k,[...v]]))});if(st.hist.length>200)st.hist.shift();
+  const runPhase=!!st.carrier;
+  // offense movement
+  if(!runPhase){
+    if(G.play.run){
+      const path=[[3,-3],[14,-3],[17,3],[17,40]];
+      const p=routePoint(OFF0.SL,path,st.t*SPD,false);st.o.SL=p;
+      if(!st.handed&&dist(p,st.o.QB)<2.2){st.handed=true;st.carrier="SL";LG.tone(500,.05);msg("<b class='big'>Handoff!</b>Run, run, run!")}
+      for(const k of ["WRL","C","WRR"]){const r=k==="C"?"hitch":"go";st.o[k]=routePoint(OFF0[k],ROUTES[r].p,st.t*SPD*.8,k==="WRR")}
+    }else for(const k in G.play.r)st.o[k]=routePoint(OFF0[k],ROUTES[G.play.r[k]].p,Math.max(0,st.t-.15)*SPD,k==="WRR");
+  }else{
+    const c=st.o[st.carrier];let near=null,nd=99;for(const d of ["CBL","LB","S","CBR","R"]){const dd=dist(c,st.d[d]);if(dd<nd){nd=dd;near=st.d[d]}}
+    let dx=0;if(near&&nd<5)dx=c[0]<near[0]?-.6:.6;
+    if(G.play.run&&st.carrier==="SL"&&!st.turned){const p=routePoint(OFF0.SL,[[3,-3],[14,-3],[17,3]],st.t*SPD,false);c[0]=p[0];c[1]=p[1];if(dist(p,[26,2])<.05)st.turned=true}
+    else{c[0]+=dx*CSPD*dt*.5;c[1]+=CSPD*dt}
+    for(const k of ["WRL","C","WRR","SL"])if(k!==st.carrier)moveToward(st.o[k],[st.o[k][0],st.o[k][1]+1],2,dt);
+  }
+  // defense movement
+  const carrier=st.carrier?st.o[st.carrier]:null;
+  for(const d of ["CBL","LB","S","CBR"]){
+    let target;
+    if(carrier){const ahead=Math.max(0,carrier[1]-st.d[d][1])*.35;target=[carrier[0],carrier[1]+Math.min(4,ahead+.5)]}
+    else if(G.ballFlight&&G.ballFlight.t>0.25&&dist(st.d[d],G.ballFlight.target)<4)target=G.ballFlight.target;
+    else if(G.cov==="man"){const lp=lagPos(MAN[d],.35);target=[lp[0],lp[1]+1.2]}
+    else{const a=ZONE[d];let best=null,bd=7.5;for(const k of ["WRL","SL","C","WRR"]){const dd=dist(st.o[k],a);if(dd<bd){bd=dd;best=k}}
+      if(best){const lp=lagPos(best,.25);const v=[lp[0]-a[0],lp[1]+.8-a[1]];const L=Math.hypot(...v);target=L>5.5?[a[0]+v[0]/L*5.5,a[1]+v[1]/L*5.5]:[lp[0],lp[1]+.8]}else target=a}
+    moveToward(st.d[d],target,carrier?6.3:DSPD,dt);
+  }
+  // rusher
+  const rt=carrier?carrier:st.o.QB;moveToward(st.d.R,rt,carrier?DSPD:RSPD,dt);
+  // ball
+  if(G.ballFlight){const f=G.ballFlight;f.t+=dt;const k=Math.min(1,f.t/f.dur);st.ball=[f.from[0]+(f.target[0]-f.from[0])*k,f.from[1]+(f.target[1]-f.from[1])*k];
+    if(k>=1){G.ballFlight=null;return resolveCatch(f.k)}}
+  else if(carrier)st.ball=[carrier[0]+.6,carrier[1]];
+  else st.ball=[st.o.QB[0]+.6,st.o.QB[1]];
+  // clock
+  if(!st.carrier&&!G.thrown){const left=Math.max(0,7-st.t);document.getElementById("clockfill").style.width=(left/7*100)+"%";document.getElementById("clockbar").classList.toggle("late",left<2.5)}
+  renderPlayers();
+  // events
+  if(!G.thrown&&!st.carrier){
+    if(dist(st.d.R,st.o.QB)<1.1)return endPlay(st.o.QB[1],"sack");
+    if(st.t>=7)return endPlay(0,"clock");
+  }
+  if(carrier){
+    for(const d of ["CBL","LB","S","CBR","R"])if(dist(st.d[d],carrier)<1.05)return endPlay(carrier[1],"flag");
+    if(carrier[0]<0||carrier[0]>30)return endPlay(carrier[1],"out");
+    if(G.spot+carrier[1]>=50)return endPlay(50-G.spot,"td");
+    if(G.pat&&carrier[1]>=(G.pat===1?5:10))return endPlay(carrier[1],"td");
+  }
+  return true;
+}
+function throwTo(k){
+  if(G.phase!=="live"||G.thrown||G.st.carrier||G.play.run)return;
+  G.thrown=true;LG.tone(700,.06);
+  const st=G.st,from=[...st.o.QB];
+  // lead the receiver: aim where they'll be when the ball arrives
+  let dur=dist(from,st.o[k])/19;
+  for(let i=0;i<3;i++){const p=routePoint(OFF0[k],ROUTES[G.play.r[k]].p,(st.t+dur-.15)*SPD,k==="WRR");dur=dist(from,p)/19}
+  const target=routePoint(OFF0[k],ROUTES[G.play.r[k]].p,(st.t+dur-.15)*SPD,k==="WRR");
+  G.ballFlight={from,target,dur:Math.max(.25,dur),t:0,k,sepAtThrow:openness(k)};
+  document.querySelectorAll(".throws button").forEach(b=>b.disabled=true);
+  msg(`<b class="big">Ball's in the air…</b>Thrown to the ${NAMES[k]}.`);
+}
+function resolveCatch(k){
+  const sep=openness(k),r=Math.random();
+  let pc=sep>=3?.95:sep>=1.8?.8:sep>=1.2?.55:.3,pi=sep>=3?0:sep>=1.8?.03:sep>=1.2?.1:.28;
+  if(r<pi){LG.sad();return endPlay(0,"int",k)}
+  if(r<pi+pc){LG.happy();G.st.carrier=k;msg(`<b class="big">Caught it!</b>The ${NAMES[k]} has the ball. Can they get past the defense?`);renderPlayers();return true}
+  return endPlay(0,"inc",k);
+}
+function endPlay(gain,how,k){
+  cancelAnimationFrame(G.raf);G.phase="result";svg.onclick=null;renderPlayers();
+  const g=Math.round(gain);const covTxt=G.cov==="man"?"<b>man-to-man</b>":"<b>zone</b>";
+  const fit=G.play.beats==="both"?"":G.play.beats===G.cov?` ${G.play.n} is a great call against ${G.cov}!`:` Tip: ${G.play.n} works best against ${G.play.beats}.`;
+  let head,body,after;
+  if(G.pat){
+    const need=G.pat===1?5:10;const ok=how==="td"||(["flag","out"].includes(how)&&g>=need);
+    if(ok){G.pts+=G.pat;LG.fanfare();head=`Extra point good! +${G.pat}`;body=`That makes ${G.pts} points.`}
+    else{LG.sad();head="No good.";body=how==="inc"?"Incomplete pass.":how==="int"?"Intercepted!":how==="sack"?"The rusher pulled the QB's flag.":how==="clock"?"The 7-second pass clock ran out.":`Stopped ${g<0?"behind the line":`at the ${need-g}`}.`}
+    G.pat=null;G.spot=5;G.down=1;G.crossed=false;after="New drive from your own 5.";
+  }else if(how==="td"){
+    G.pts+=6;G.tds++;LG.store.set("ff-tds",G.tds);document.getElementById("tdCount").textContent=G.tds;
+    LG.fanfare();LG.confetti(50,["#e4572e","#fff","#ffd35a"]);LG.banner("TOUCHDOWN!","+6 points");
+    head="TOUCHDOWN! +6";body=`Defense was in ${covTxt}.${fit}`;G.pat="choose";after="";
+  }else{
+    let lost=false;
+    if(how==="int"){head="Intercepted!";body=`The defender jumped the route. The ${NAMES[k]} wasn't open enough (look for green rings). Defense was in ${covTxt}.${fit}`;lost=true}
+    else if(how==="sack"){head=`Sack! Loss of ${-g} yards.`;body="The rusher pulled your flag. Throw before the rusher arrives: the clock bar shows the 7 seconds, but the rusher is often faster!"}
+    else if(how==="clock"){head="Pass clock! Loss of down.";body="The QB has only 7 seconds to throw. Pick an open receiver faster."}
+    else if(how==="inc"){head="Incomplete.";body=`The defender got a hand on it. Defense was in ${covTxt}.${fit}`}
+    else{head=g>0?`Gain of ${g} yard${g===1?"":"s"}!`:g===0?"No gain.":`Loss of ${-g}.`;body=`${how==="out"?"Ran out of bounds. ":"Flag pulled! "}Defense was in ${covTxt}.${fit}`}
+    if(!lost){
+      const ns=Math.max(0,G.spot+(how==="inc"||how==="clock"?0:g));
+      if(ns<=0){G.spot=5;G.down=1;G.crossed=false;head="Safety! 2 points for the defense.";body="You were stopped in your own end zone. That's a safety.";after="New drive from your own 5.";LG.sad()}
+      else{G.spot=ns;
+        if(!G.crossed&&G.spot>=25){G.crossed=true;G.down=1;after="You crossed midfield! New set of downs: 3 tries to score.";LG.happy()}
+        else{G.down++;const allowed=G.crossed?3:4;if(G.down>allowed){after=`Turnover on downs. You needed to ${G.crossed?"score":"cross midfield"} in ${allowed} tries. New drive from your own 5.`;G.spot=5;G.down=1;G.crossed=false}}
+      }
+    }else{after="Turnover! The other team gets the ball. New drive from your own 5.";G.spot=5;G.down=1;G.crossed=false}
+  }
+  updateBoard();
+  msg(`<b class="big">${head}</b>${body}${after?` <br><b>${after}</b>`:""}`);
+  if(G.pat==="choose"){
+    controls(`<div class="throws"><button type="button" class="primary" data-p="1">Go for 1<small>from the 5, pass only</small></button><button type="button" data-p="2">Go for 2<small>from the 10, run or pass</small></button></div>`);
+    document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{LG.click();G.pat=+b.dataset.p;G.spot=50-(G.pat===1?5:10);setup()});
+  }else{controls(`<button type="button" class="primary big" id="nextPlay">Next play</button>`);document.getElementById("nextPlay").onclick=()=>{LG.click();setup()}}
+}
+
+/* ---------- 6. Quiz ---------- */
+LG.quiz(document.getElementById("quizBox"),[
+  {q:"In flag football, how do you \"tackle\" the ball carrier?",c:["Pull one of their flags","Push them down","Grab their jersey","Block them"],why:"Pulling a flag ends the play. No contact!"},
+  {q:"How long does the QB have to throw?",c:["7 seconds","3 seconds","15 seconds","As long as they want"],why:"The pass clock is 7 seconds."},
+  {q:"Can the QB run with the ball past the line?",c:["Only if it was handed off first","Yes, anytime","Only on 4th down","Only in the end zone"],why:"In NFL FLAG, the QB can't run unless the ball was handed off first."},
+  {q:"How far back must a rusher start?",c:["7 yards from the line of scrimmage","1 yard","Right on the line","20 yards"],why:"The rush line is 7 yards back."},
+  {q:"How many downs do you get to cross midfield?",c:["4","3","2","10"],why:"4 downs to cross midfield, then 3 downs to score."},
+  {q:"You're in a no-run zone. What must you do?",c:["Pass the ball","Run the ball","Punt","Kneel"],why:"No-run zones are pass-only for a first down or touchdown."},
+  {q:"How many points is a touchdown?",c:["6","7","3","2"],why:"6 points, then try for an extra point."},
+  {q:"A 1-point try after a touchdown is from the…",c:["5-yard line (pass only)","10-yard line","Midfield","1-yard line"],why:"1 point from the 5 (in the no-run zone, so it's pass only), 2 points from the 10."},
+  {q:"What is flag guarding?",c:["Blocking defenders from your flags: it's illegal","A good defensive move","Wearing extra flags","Holding the ball high"],why:"Covering your flags with your hand, arm or the ball is a penalty."},
+  {q:"Defenders are lined up right across from each receiver. That's probably…",c:["Man-to-man coverage","Zone coverage","No defense","A blitz by everyone"],why:"Man coverage: each defender has a person to guard."},
+  {q:"Which quick route is great against man coverage?",c:["Slant","Fade to nowhere","Standing still","Running backward"],why:"A slant cuts sharply in front of the defender."},
+  {q:"Which route stops and sits in an open space?",c:["Curl","Go","Post","Corner"],why:"A curl sits in the hole between zone defenders."},
+  {q:"Which route goes straight down the field?",c:["Go (fly)","Flat","Hitch","Drag"],why:"Go, fly or streak: run straight and fast!"},
+  {q:"What does the safety do?",c:["Plays deep as the last line of defense","Snaps the ball","Rushes the QB","Throws passes"],why:"The safety stops long passes."},
+  {q:"What's a safety (the score)?",c:["2 points for the defense when the ball carrier is stopped in their own end zone","6 points","An extra point","A penalty"],why:"Stopped in your own end zone = safety, 2 points for the defense."},
+  {q:"Can the center catch a pass?",c:["Yes, everyone on offense can catch","No, never","Only on 4th down","Only in the end zone"],why:"After snapping, the center runs a route like everyone else."}
+],{key:"ff-quiz",count:10});
+
+LG.tabs("football",id=>{if(id==="qb"&&!G.st)setup()});
+</script>
+</body>
+</html>

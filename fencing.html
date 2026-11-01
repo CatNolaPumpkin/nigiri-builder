@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fencing Academy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Fredoka:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Fencing Academy: steel-blue competition hall with the red/green scoring-box lights. Single theme by choice. */
+:root{--bg:#18212e;--fg:#eef3f8;--panel:#233142;--panel-2:#2e3f54;--card:#f4f7fb;--card-ink:#18212e;--accent:#8fd3ff;--on-accent:#0f1a26;--muted:#5a6b80;
+  --red:#e2384d;--green:#2fbf6b}
+.split{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:720px){.split{grid-template-columns:1fr}}
+.fencer-box{background:linear-gradient(180deg,#dfe8f2,#c7d3e0);border-radius:16px;padding:10px;max-width:320px;width:100%;justify-self:center}
+.fencer-box svg{width:100%;height:auto;display:block}
+.layer{opacity:0;transition:opacity .45s, transform .45s;transform:translateY(-8px)}
+.layer.on{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.layer{transition:none;transform:none}}
+.gear{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr));gap:8px}
+.gear button{padding:10px 8px;font-size:15px;line-height:1.15}
+.gear button.done{background:var(--good);color:#fff}
+.weap{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.weap .card svg{width:120px;height:auto;float:right;margin:0 0 6px 8px}
+.lights{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.lamp{width:22px;height:22px;border-radius:50%;display:inline-block;border:2px solid rgba(0,0,0,.2)}
+.lamp.r{background:var(--red)}.lamp.g{background:var(--green)}.lamp.w{background:#fff}
+.piste svg{width:100%;height:auto;display:block}
+.hotspot.on .hs-ring{stroke:var(--gold);stroke-width:5}
+
+/* bout */
+.arena{background:#0f1620;border-radius:16px;padding:12px;display:grid;gap:10px}
+.boxrow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.sc{font-family:var(--display);font-size:clamp(28px,8vw,44px);font-variant-numeric:tabular-nums;line-height:1}
+.sc.l{color:var(--red)}.sc.r{color:var(--green);text-align:right}
+.box{display:flex;gap:8px;background:#222c38;padding:8px 10px;border-radius:12px}
+.bl{width:clamp(22px,6vw,34px);height:clamp(22px,6vw,34px);border-radius:50%;background:#3a4656;transition:background .1s, box-shadow .1s}
+.bl.r.on{background:var(--red);box-shadow:0 0 18px var(--red)}
+.bl.g.on{background:var(--green);box-shadow:0 0 18px var(--green)}
+.bl.w.on{background:#fff;box-shadow:0 0 14px #fff}
+.who{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;opacity:.8}
+.who.r{text-align:right}
+.stripsvg{width:100%;height:auto;display:block}
+.ref{background:#f4f7fb;color:#18212e;border-radius:12px;padding:10px 12px;font-weight:600;min-height:48px}
+.ref i{font-weight:400;color:#5a6b80}
+.tell{background:#233142;border-radius:12px;padding:10px 12px;min-height:44px}
+.tell b{color:var(--accent)}
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.acts button{padding:12px 6px;font-size:16px;line-height:1.1}
+.acts button small{display:block;font-weight:400;font-size:12px;opacity:.75;margin-top:2px}
+.acts .atk{background:#ffd3d9}.acts .def{background:#cfeeff}
+.coachline{min-height:44px}
+.f-guard,.f-lunge{transition:opacity .12s}
+.lunging .f-guard{opacity:0}.f-lunge{opacity:0}.lunging .f-lunge{opacity:1}
+.wsel{display:flex;gap:8px;flex-wrap:wrap}
+.wsel button[aria-pressed="true"]{background:var(--accent);outline:3px solid var(--gold);outline-offset:-3px}
+label.toggle{display:inline-flex;gap:8px;align-items:center;font-weight:600;cursor:pointer}
+label.toggle input{width:22px;height:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="game-head">
+    <h1>Fencing Academy<small>Learn the sport like a pro</small></h1>
+    <div class="chips"><div class="chip">Bouts won <b id="boutsWon">0</b></div></div>
+  </header>
+
+  <nav class="sub" aria-label="Fencing lessons">
+    <button data-tab="gear">1 · Gear up</button>
+    <button data-tab="weapons">2 · 3 weapons</button>
+    <button data-tab="piste">3 · The piste</button>
+    <button data-tab="words">4 · Fencing words</button>
+    <button data-tab="bout">5 · Fence a bout!</button>
+    <button data-tab="quiz">6 · Quiz</button>
+  </nav>
+
+  <!-- 1. Gear -->
+  <section data-panel="gear">
+    <p class="lead">Fencers dress in a set order so every piece protects the next. Tap the gear in the right order to dress the fencer. Start from the bottom!</p>
+    <div class="split">
+      <div class="fencer-box" id="fencerBox"></div>
+      <div style="display:grid;gap:12px;align-content:start">
+        <div class="gear" id="gearBtns"></div>
+        <div class="card info" id="gearInfo" aria-live="polite"><h3>Ready?</h3><p>Pick the first thing a fencer puts on.</p></div>
+        <button type="button" id="gearReset">Undress and start over</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Parts of the weapon</h3>
+      <svg viewBox="0 0 400 112" style="width:100%;height:auto" role="img" aria-label="A foil with its parts labeled: pommel, grip, bell guard, forte, foible and tip">
+        <rect x="6" y="50" width="16" height="12" rx="4" fill="#59616f"/><rect x="22" y="48" width="48" height="16" rx="6" fill="#2e3f54"/>
+        <path d="M70 32 Q96 56 70 80 Z" fill="#b8c3cf" stroke="#59616f" stroke-width="2"/>
+        <path d="M84 54 L388 55 L84 58 Z" fill="#8c97a3"/><circle cx="389" cy="55.5" r="3.5" fill="#59616f"/>
+        <rect x="86" y="51" width="130" height="9" fill="#e2384d" opacity=".25"/><rect x="250" y="51" width="134" height="9" fill="#2fbf6b" opacity=".3"/>
+        <g font-family="Fredoka,sans-serif" font-size="15" font-weight="600" fill="#18212e">
+          <text x="2" y="100">Pommel</text><text x="66" y="100">Grip</text><text x="48" y="22">Bell guard</text>
+          <text x="151" y="40" text-anchor="middle">Forte (strong)</text><text x="317" y="40" text-anchor="middle">Foible (weak)</text><text x="396" y="100" text-anchor="end">Tip</text></g>
+        <g stroke="#18212e" stroke-width="1" opacity=".5"><line x1="16" y1="86" x2="14" y2="64"/><line x1="78" y1="86" x2="50" y2="65"/><line x1="388" y1="86" x2="389" y2="60"/></g>
+      </svg>
+      <p class="tip"><b>Coach says:</b> Parry with your <b>forte</b> (the strong part near the guard) and hit with your <b>tip</b>. The bell guard protects your hand.</p>
+    </div>
+  </section>
+
+  <!-- 2. Weapons -->
+  <section data-panel="weapons">
+    <p class="lead">There are three fencing weapons. Each one has its own <b>target area</b> (where a hit counts) and its own rules. Most kids start with foil.</p>
+    <div class="weap" id="weapCards"></div>
+    <div class="card">
+      <h3>Right of way (foil and sabre)</h3>
+      <p>If both fencers hit at about the same time, the referee decides who <b>started the attack first</b>. The attacker has "right of way." To take it away, the defender must <b>parry</b> (block) or make the attacker miss. Then the defender's <b>riposte</b> has right of way.</p>
+      <p>Épée has <b>no right of way</b>: whoever hits first scores. If both hit within 1/25 of a second, both get a point (a "double").</p>
+    </div>
+    <div class="card"><h3>The scoring box</h3>
+      <div class="lights"><span class="lamp r"></span> Red = left fencer scored <span class="lamp g"></span> Green = right fencer scored <span class="lamp w"></span> White = off-target (foil only)</div>
+      <p>The fencers are wired up with <b>body cords</b>. When a tip presses in, or a sabre touches the metallic jacket, the box lights up.</p></div>
+  </section>
+
+  <!-- 3. Piste -->
+  <section data-panel="piste">
+    <p class="lead">Fencing happens on a long, narrow strip called the <b>piste</b> (say "peest"). Tap the parts to learn them.</p>
+    <div class="panel piste" id="pisteBox"></div>
+    <div class="card info" id="pisteInfo" aria-live="polite"><h3>Tap a part of the piste</h3><p>Each line has a job.</p></div>
+    <div class="cards">
+      <div class="card"><h3>How a bout goes</h3><ul><li>Salute your opponent, the referee, and the crowd with your weapon</li><li>Masks on. Referee: "En garde! Prêts? Allez!"</li><li>After each touch the referee says "Halte!" and you go back to the en garde lines</li><li>Pool bouts: first to <b>5 touches</b> (3 minutes)</li><li>Direct elimination bouts: usually to <b>15</b> (three 3-minute periods). Younger age groups sometimes fence shorter bouts.</li><li>At the end: salute, take off your mask, and shake hands with your non-weapon hand</li></ul></div>
+      <div class="card"><h3>Penalty cards</h3><ul><li><b>Yellow:</b> a warning</li><li><b>Red:</b> a touch is given to your opponent</li><li><b>Black:</b> you're out of the event (like refusing to salute or shake hands)</li></ul></div>
+      <div class="card"><h3>En garde stance</h3><ul><li>Feet at a right angle, about shoulder-width apart</li><li>Front foot points at your opponent</li><li>Knees bent, weight in the middle</li><li>Weapon arm bent, tip pointing at the opponent</li><li>Back arm up (foil and épée) or on your hip (sabre)</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 4. Words -->
+  <section data-panel="words">
+    <p class="lead">Fencing words are French because modern fencing grew up in France. Tap a card to flip it. Tap 🔊 to hear it said.</p>
+    <div id="flash"></div>
+  </section>
+
+  <!-- 5. Bout -->
+  <section data-panel="bout">
+    <div class="row" style="justify-content:space-between">
+      <div class="wsel" id="wsel"></div>
+      <label class="toggle"><input type="checkbox" id="voice" checked> Referee voice</label>
+    </div>
+    <div class="arena">
+      <div class="boxrow">
+        <div><div class="who">Lennox</div><div class="sc l" id="scL">0</div></div>
+        <div class="box" aria-hidden="true"><span class="bl r" id="lR"></span><span class="bl w" id="lW1"></span><span class="bl w" id="lW2"></span><span class="bl g" id="lG"></span></div>
+        <div><div class="who r">Opponent</div><div class="sc r" id="scR">0</div></div>
+      </div>
+      <div id="strip"></div>
+      <div class="ref" id="ref" aria-live="polite"></div>
+      <div class="tell" id="tell" aria-live="polite"></div>
+      <div class="acts" id="acts"></div>
+      <div class="tip coachline" id="coach" aria-live="polite"></div>
+      <div class="row"><button type="button" id="newBout">New bout</button></div>
+    </div>
+  </section>
+
+  <!-- 6. Quiz -->
+  <section data-panel="quiz"><div class="panel" id="quizBox"></div></section>
+
+  <footer>Made with love for Lennox</footer>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/* ---------- 1. Gear up ---------- */
+const SKIN="#8d5a3b";
+const fencerSVG=`<svg viewBox="0 0 200 340" role="img" aria-label="A fencer getting dressed">
+  <g id="base">
+    <line x1="80" y1="168" x2="74" y2="306" stroke="${SKIN}" stroke-width="18" stroke-linecap="round"/>
+    <line x1="120" y1="168" x2="126" y2="306" stroke="${SKIN}" stroke-width="18" stroke-linecap="round"/>
+    <path d="M70 160 h60 l2 34 h-26 l-6 -14 l-6 14 h-26z" fill="#2e3f54"/>
+    <polyline points="68,94 50,140 40,184" fill="none" stroke="${SKIN}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="132,94 150,140 156,184" fill="none" stroke="${SKIN}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M66 86 Q100 78 134 86 L128 168 Q100 174 72 168 Z" fill="#9aa7b6"/>
+    <rect x="92" y="66" width="16" height="20" fill="${SKIN}"/>
+    <circle cx="100" cy="48" r="24" fill="${SKIN}"/>
+    <path d="M77 42 Q80 20 100 20 Q120 20 123 42 Q112 30 100 31 Q88 30 77 42z" fill="#1a1a1a"/>
+    <circle cx="91" cy="50" r="2.6" fill="#1a1a1a"/><circle cx="109" cy="50" r="2.6" fill="#1a1a1a"/>
+    <path d="M92 60 Q100 66 108 60" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+  <g class="layer" id="L-breeches"><path d="M68 158 h64 l4 98 h-26 l-10 -76 l-10 76 h-26z" fill="#fff" stroke="#c9d3e0" stroke-width="2"/>
+    <line x1="80" y1="158" x2="82" y2="96" stroke="#fff" stroke-width="5"/><line x1="120" y1="158" x2="118" y2="96" stroke="#fff" stroke-width="5"/></g>
+  <g class="layer" id="L-socks"><line x1="75" y1="252" x2="74" y2="300" stroke="#fff" stroke-width="19" stroke-linecap="round"/><line x1="125" y1="252" x2="126" y2="300" stroke="#fff" stroke-width="19" stroke-linecap="round"/>
+    <line x1="66" y1="258" x2="84" y2="258" stroke="#c9d3e0" stroke-width="2"/><line x1="116" y1="258" x2="134" y2="258" stroke="#c9d3e0" stroke-width="2"/></g>
+  <g class="layer" id="L-shoes"><path d="M60 304 h24 q8 0 8 8 v4 h-40 q-2 -12 8 -12z" fill="#3a4656"/><path d="M116 304 h24 q10 0 8 12 h-40 v-4 q0 -8 8 -8z" fill="#3a4656"/>
+    <line x1="52" y1="316" x2="92" y2="316" stroke="#fff" stroke-width="3"/><line x1="108" y1="316" x2="148" y2="316" stroke="#fff" stroke-width="3"/></g>
+  <g class="layer" id="L-plastron"><path d="M66 88 Q78 84 92 86 L90 160 Q78 162 72 160 Z" fill="#cfe3f4" stroke="#8fa6bd" stroke-width="2"/>
+    <polyline points="68,94 50,140" fill="none" stroke="#cfe3f4" stroke-width="18" stroke-linecap="round"/></g>
+  <g class="layer" id="L-jacket">
+    <polyline points="68,94 50,140 40,180" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="132,94 150,140 156,180" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M64 84 Q100 76 136 84 L130 172 Q100 180 70 172 Z" fill="#fff" stroke="#c9d3e0" stroke-width="2"/>
+    <path d="M90 70 h20 v16 h-20z" fill="#fff" stroke="#c9d3e0" stroke-width="2"/>
+    <path d="M96 172 L100 196 L104 172" fill="#fff" stroke="#c9d3e0" stroke-width="2"/>
+    <line x1="112" y1="80" x2="128" y2="168" stroke="#c9d3e0" stroke-width="2" stroke-dasharray="4 4"/></g>
+  <g class="layer" id="L-lame"><path d="M68 90 Q100 82 132 90 L128 170 Q100 177 72 170 Z" fill="url(#metal)" stroke="#8c97a3" stroke-width="2"/>
+    <path d="M90 70 h20 v18 h-20z" fill="url(#metal)" stroke="#8c97a3" stroke-width="1.5"/>
+    <defs><linearGradient id="metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#eef2f6"/><stop offset=".45" stop-color="#aeb9c5"/><stop offset=".6" stop-color="#dfe5eb"/><stop offset="1" stop-color="#97a3b0"/></linearGradient></defs></g>
+  <g class="layer" id="L-cord"><path d="M124 150 Q110 140 86 110 Q72 96 64 104 Q56 120 48 146 Q44 160 40 176" fill="none" stroke="#e2384d" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="124" cy="150" r="5" fill="#e2384d"/></g>
+  <g class="layer" id="L-glove"><path d="M30 166 q10 -6 22 0 l-2 26 q-8 6 -18 0z" fill="#fff" stroke="#c9d3e0" stroke-width="2"/><circle cx="40" cy="190" r="9" fill="#fff" stroke="#c9d3e0" stroke-width="2"/></g>
+  <g class="layer" id="L-mask"><path d="M76 62 Q72 34 84 22 Q100 12 116 22 Q128 34 124 62 Z" fill="#2a3340"/>
+    <path d="M80 58 Q78 36 88 26 Q100 18 112 26 Q122 36 120 58 Z" fill="none" stroke="#5a6676" stroke-width="1"/>
+    ${[30,36,42,48,54].map(y=>`<line x1="80" y1="${y}" x2="120" y2="${y}" stroke="#4a5462" stroke-width="1"/>`).join("")}
+    ${[86,93,100,107,114].map(x=>`<line x1="${x}" y1="22" x2="${x}" y2="60" stroke="#4a5462" stroke-width="1"/>`).join("")}
+    <path d="M74 60 Q100 74 126 60 L122 82 Q100 90 78 82 Z" fill="#fff" stroke="#c9d3e0" stroke-width="2"/>
+    <path d="M78 26 Q100 6 122 26" fill="none" stroke="#c9d3e0" stroke-width="5" stroke-linecap="round"/></g>
+  <g class="layer" id="L-weapon"><line x1="38" y1="190" x2="12" y2="18" stroke="#8c97a3" stroke-width="3" stroke-linecap="round"/><circle cx="12" cy="18" r="3" fill="#59616f"/>
+    <ellipse cx="36" cy="178" rx="15" ry="6" fill="#b8c3cf" stroke="#59616f" stroke-width="2" transform="rotate(-10 36 178)"/>
+    <rect x="34" y="186" width="9" height="20" rx="3" fill="#2e3f54"/></g>
+</svg>`;
+document.getElementById("fencerBox").innerHTML=fencerSVG;
+const GEAR=[
+  {k:"breeches",t:"Breeches",d:"Knee-length fencing pants with suspenders. They're made of tough fabric that a blade can't poke through.",hint:"Start with the bottom half: what covers your legs?"},
+  {k:"socks",t:"Long socks",d:"Knee-high socks that meet the breeches, so no skin shows on your legs.",hint:"Something that covers your lower legs."},
+  {k:"shoes",t:"Fencing shoes",d:"Flat shoes with grip for quick footwork. Fencers push off hard, so the soles have extra protection at the heel and toe.",hint:"Finish the bottom: what goes on your feet?"},
+  {k:"plastron",t:"Underarm protector",d:"Also called a plastron. A half-jacket that goes under your jacket on your weapon-arm side for a double layer where blades hit most.",hint:"Before the jacket, there's an extra layer that goes underneath it."},
+  {k:"jacket",t:"Fencing jacket",d:"A tough white jacket with a high collar and a strap between the legs so it can't ride up. The zipper is on the back side, away from your opponent.",hint:"Now the main protective top."},
+  {k:"lame",t:"Lamé (electric vest)",d:"A metallic vest worn for foil (and a jacket version for sabre). When a weapon touches it, the scoring box knows the hit was on target. Épée fencers don't need one.",hint:"The shiny metal layer that goes over the jacket."},
+  {k:"cord",t:"Body cord",d:"A wire that runs up your sleeve, under your jacket, and plugs into your weapon and into a reel behind you. It connects you to the scoring box.",hint:"The wire comes next, before the hand is covered."},
+  {k:"glove",t:"Glove",d:"One glove, worn only on your weapon hand. Its long cuff goes over the jacket sleeve and covers where the body cord comes out.",hint:"Protect your weapon hand."},
+  {k:"mask",t:"Mask",d:"Strong steel mesh you can see through, with a padded bib that protects your neck. For foil and sabre the bib is electric too.",hint:"Almost last. Protect your face!"},
+  {k:"weapon",t:"Weapon",d:"Last of all, plug the body cord into your weapon. Now you're ready to salute and fence!",hint:"The very last thing."}
+];
+let dressed=0;
+function gearButtons(){
+  const order=LG.shuffle(GEAR.map(g=>g.k));
+  document.getElementById("gearBtns").innerHTML=order.map(k=>{const g=GEAR.find(x=>x.k===k);return `<button type="button" data-k="${k}">${g.t}</button>`}).join("");
+  document.querySelectorAll("#gearBtns button").forEach(b=>b.onclick=()=>gearPick(b));
+}
+function gearPick(b){
+  const k=b.dataset.k,g=GEAR.find(x=>x.k===k),idx=GEAR.indexOf(g),info=document.getElementById("gearInfo");
+  if(idx<dressed){LG.click();info.innerHTML=`<h3>${g.t}</h3><p>${g.d}</p>`;return}
+  if(idx===dressed){
+    dressed++;b.classList.add("done");document.getElementById("L-"+k).classList.add("on");LG.happy();
+    info.innerHTML=`<h3>${dressed}. ${g.t} ✓</h3><p>${g.d}</p>`;
+    if(k==="jacket")document.getElementById("L-plastron").classList.remove("on");
+    if(dressed===GEAR.length){LG.fanfare();LG.confetti(40);LG.banner("Ready to fence!","En garde!");
+      info.innerHTML+=`<p class="tip">All dressed! Tap any piece of gear to read about it again.</p>`}
+  }else{LG.sad();info.innerHTML=`<h3>Not yet!</h3><p>${GEAR[dressed].hint}</p>`}
+}
+document.getElementById("gearReset").onclick=()=>{dressed=0;document.querySelectorAll("#fencerBox .layer").forEach(l=>l.classList.remove("on"));gearButtons();
+  document.getElementById("gearInfo").innerHTML=`<h3>Ready?</h3><p>Pick the first thing a fencer puts on.</p>`;LG.click()};
+gearButtons();
+
+/* ---------- 2. Weapons ---------- */
+function targetSVG(w){
+  const hl="#e2384d",base="#c9d3e0";
+  const torso=w==="foil"||w==="sabre"||w==="epee"?hl:base;
+  const arms=w==="foil"?base:hl,head=w==="foil"?base:hl,legs=w==="epee"?hl:base;
+  return `<svg viewBox="0 0 100 170" aria-hidden="true">
+    <circle cx="50" cy="20" r="14" fill="${head}"/>
+    <path d="M30 38 Q50 32 70 38 L66 92 Q50 96 34 92 Z" fill="${torso}"/>
+    ${w==="foil"?`<path d="M44 34 h12 v8 h-12z" fill="${hl}"/>`:""}
+    <polyline points="30,40 18,70 14,96" fill="none" stroke="${arms}" stroke-width="9" stroke-linecap="round"/>
+    <polyline points="70,40 82,70 86,96" fill="none" stroke="${arms}" stroke-width="9" stroke-linecap="round"/>
+    <line x1="40" y1="94" x2="36" y2="160" stroke="${legs}" stroke-width="11" stroke-linecap="round"/>
+    <line x1="60" y1="94" x2="64" y2="160" stroke="${legs}" stroke-width="11" stroke-linecap="round"/>
+    ${w==="foil"?`<path d="M34 92 L50 104 L66 92" fill="${hl}"/>`:""}
+  </svg>`;
+}
+const WEAPONS=[
+  {k:"foil",t:"Foil",s:"foyle",target:"Torso only: chest, back, the groin area and the bib below the chin. Not arms, head or legs.",how:"Hit with the <b>tip</b> only (a thrust).",row:"Yes, right of way.",light:"Hits off the target light up <b>white</b> and stop the action, but don't score.",fact:"Light and flexible. Most kids learn foil first because it teaches you to attack and defend with good habits."},
+  {k:"epee",t:"Épée",s:"EP-ay",target:"The <b>whole body</b>, head to toe, even your foot!",how:"Hit with the <b>tip</b> only. It's heavier and stiffer than a foil.",row:"No right of way. First to hit scores. Both hit together? Both get a point.",light:"No white light: everywhere counts.",fact:"It comes from real dueling swords, where any touch anywhere ended the fight. Épée fencers are patient and careful."},
+  {k:"sabre",t:"Sabre",s:"SAY-ber",target:"Everything <b>above the waist</b>: torso, arms, head and mask.",how:"Hit with the <b>tip or the edge</b>. You can slash (cut) as well as poke.",row:"Yes, right of way.",light:"Off-target hits don't light up at all.",fact:"It comes from cavalry swords used on horseback, which is why you can't hit the legs. Sabre is the fastest weapon. No running attacks (flèche) allowed."}
+];
+document.getElementById("weapCards").innerHTML=WEAPONS.map(w=>`<div class="card">${targetSVG(w.k)}<h3>${w.t}</h3><p class="say">say: ${w.s}</p>
+  <p><b>Target:</b> ${w.target}</p><p><b>How to score:</b> ${w.how}</p><p><b>Right of way?</b> ${w.row}</p><p><b>Lights:</b> ${w.light}</p><p class="muted">${w.fact}</p>
+  <p class="muted" style="clear:both;font-size:14px">Red = valid target</p></div>`).join("");
+
+/* ---------- 3. Piste ---------- */
+document.getElementById("pisteBox").innerHTML=`<svg viewBox="-10 -40 1420 300" role="img" aria-label="Diagram of a fencing piste">
+  <defs><pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="16" height="16" fill="#3b2a35"/><line x1="0" y1="0" x2="0" y2="16" stroke="#e2384d" stroke-width="5" opacity=".55"/></pattern></defs>
+  <rect x="0" y="0" width="1400" height="200" fill="#3e4c5e" rx="6"/>
+  <g class="hotspot" data-k="warn"><rect class="hs-ring" x="0" y="0" width="200" height="200" fill="url(#hatch)" stroke="transparent" stroke-width="0"/><rect x="1200" y="0" width="200" height="200" fill="url(#hatch)"/></g>
+  <g class="hotspot" data-k="rear"><line class="hs-ring" x1="2" y1="0" x2="2" y2="200" stroke="#fff" stroke-width="8"/><line x1="1398" y1="0" x2="1398" y2="200" stroke="#fff" stroke-width="8"/>
+    <rect x="-10" y="0" width="30" height="200" fill="transparent"/><rect x="1380" y="0" width="30" height="200" fill="transparent"/></g>
+  <g class="hotspot" data-k="center"><line class="hs-ring" x1="700" y1="0" x2="700" y2="200" stroke="#fff" stroke-width="6"/><rect x="680" y="0" width="40" height="200" fill="transparent"/></g>
+  <g class="hotspot" data-k="garde"><line class="hs-ring" x1="500" y1="0" x2="500" y2="200" stroke="#8fd3ff" stroke-width="6"/><line x1="900" y1="0" x2="900" y2="200" stroke="#8fd3ff" stroke-width="6"/>
+    <rect x="480" y="0" width="40" height="200" fill="transparent"/><rect x="880" y="0" width="40" height="200" fill="transparent"/></g>
+  <g class="hotspot" data-k="side"><line class="hs-ring" x1="0" y1="200" x2="1400" y2="200" stroke="#f2b134" stroke-width="6"/><line x1="0" y1="0" x2="1400" y2="0" stroke="#f2b134" stroke-width="6"/>
+    <rect x="0" y="186" width="1400" height="28" fill="transparent"/></g>
+  <g font-family="Fredoka,sans-serif" font-weight="600" fill="#eef3f8" font-size="34" text-anchor="middle">
+    <text x="700" y="-10">14 meters long (about 46 feet)</text>
+    <text x="100" y="250">Warning zone</text><text x="1300" y="250">Warning zone</text>
+    <text x="700" y="250">Center line</text><text x="500" y="110" font-size="26" transform="rotate(-90 470 100)">En garde</text>
+    <text x="900" y="110" font-size="26" transform="rotate(-90 870 100)">En garde</text></g>
+  <circle cx="430" cy="100" r="22" fill="#e2384d"/><circle cx="970" cy="100" r="22" fill="#2fbf6b"/>
+</svg>`;
+LG.hotspots(document.getElementById("pisteBox"),{
+  center:{t:"Center line",d:"Splits the piste in half. The two en garde lines are measured from here."},
+  garde:{t:"En garde lines",d:"Each fencer starts behind their en garde line, 2 meters from the center. So you start 4 meters apart. After every touch, both fencers go back here."},
+  warn:{t:"Warning zone",d:"The last 2 meters before each end, often a different color. It warns you that you're running out of room to retreat."},
+  rear:{t:"Rear limit",d:"The very end of the piste. If you retreat with <b>both feet</b> past it, your opponent gets a touch. Don't run out of room!"},
+  side:{t:"Side lines",d:"The piste is only 1.5 to 2 meters wide, so you fence in a straight line. Step off the side with both feet and the referee stops the bout; you get moved back 1 meter as a penalty."}
+},document.getElementById("pisteInfo"));
+
+/* ---------- 4. Words ---------- */
+LG.flashcards(document.getElementById("flash"),[
+  {term:"En garde",say:"ahn GARD",mean:"Get in your ready stance. The referee's first command."},
+  {term:"Prêts?",say:"PREH",mean:"\"Ready?\" Asked by the referee."},
+  {term:"Allez!",say:"ah-LAY",mean:"\"Go!\" Start fencing."},
+  {term:"Halte!",say:"ALT",mean:"\"Stop!\" Freeze after a hit or a problem."},
+  {term:"Touché",say:"too-SHAY",mean:"\"Touched!\" A hit. Each hit is called a touch."},
+  {term:"Marche",say:"MARSH",mean:"Advance: a step forward. Front foot moves first, then the back foot.",speakAs:"marche"},
+  {term:"Retraite",say:"ruh-TRET",mean:"Retreat: a step back. Back foot moves first."},
+  {term:"Fente",say:"FAHNT",mean:"Lunge: the main attack. Arm extends first, front foot kicks out, back leg pushes and straightens."},
+  {term:"Flèche",say:"FLESH",mean:"\"Arrow.\" A running attack where you cross your feet. Not allowed in sabre."},
+  {term:"Parade",say:"pa-RAHD",mean:"Parry: block the opponent's blade with yours. Parries have numbers: <b>4</b> guards your inside, <b>6</b> guards your outside."},
+  {term:"Riposte",say:"ree-POST",mean:"Your counter-hit right after a successful parry. It has right of way!"},
+  {term:"Contre-attaque",say:"kontr-ah-TAK",mean:"Counterattack: hitting into your opponent's attack instead of parrying it. Risky in foil and sabre."},
+  {term:"Remise",say:"ruh-MEEZ",mean:"Attacking again right away, in the same spot, after your first attack misses or gets parried."},
+  {term:"Battement",say:"bat-MAHN",mean:"Beat: a sharp tap on the opponent's blade to knock it aside and start your attack."},
+  {term:"Feinte",say:"FANT",mean:"Feint: a fake attack to trick your opponent into parrying the wrong way."},
+  {term:"Dégagement",say:"day-gazh-MAHN",mean:"Disengage: slip your blade around the opponent's blade into a new line."},
+  {term:"Priorité",say:"pree-or-ee-TAY",mean:"Right of way: the rule in foil and sabre that decides who scores when both fencers hit."},
+  {term:"Salut",say:"sa-LOO",mean:"Salute: raise your weapon to your opponent and the referee before and after the bout."},
+  {term:"Piste",say:"PEEST",mean:"The fencing strip, 14 meters long."},
+  {term:"Corps-à-corps",say:"kor-ah-KOR",mean:"Body contact. Not allowed in foil and sabre; the referee stops the action."}
+],"fr-FR");
+
+/* ---------- 5. Bout simulator ---------- */
+let W="foil";
+const B={pl:-2,op:2,sL:0,sR:0,busy:false,plan:null,over:false,touches:0};
+let won=LG.store.get("fence-won",0);document.getElementById("boutsWon").textContent=won;
+document.getElementById("wsel").innerHTML=WEAPONS.map(w=>`<button type="button" data-k="${w.k}" aria-pressed="${w.k===W}">${w.t}</button>`).join("");
+document.querySelectorAll("#wsel button").forEach(b=>b.onclick=()=>{W=b.dataset.k;document.querySelectorAll("#wsel button").forEach(x=>x.setAttribute("aria-pressed",x===b));LG.click();newBout()});
+const X=m=>(m+7)*50;
+function fencerG(id,color,flip){
+  return `<g id="${id}" style="transition:transform .35s ease"><g transform="${flip?"scale(-1,1)":""}">
+   <g class="f-guard">
+     <line x1="-6" y1="30" x2="-24" y2="62" stroke="#fff" stroke-width="7" stroke-linecap="round"/><line x1="-24" y1="62" x2="-20" y2="88" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+     <line x1="6" y1="30" x2="22" y2="60" stroke="#fff" stroke-width="7" stroke-linecap="round"/><line x1="22" y1="60" x2="30" y2="88" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+     <path d="M-10 -20 L12 -20 L10 32 L-8 32Z" fill="#fff"/>
+     <polyline points="8,-14 26,0 38,-6" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+     <line x1="38" y1="-6" x2="96" y2="-22" stroke="#b8c3cf" stroke-width="2.5"/>
+     <polyline points="-8,-14 -22,-28 -18,-44" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+   </g>
+   <g class="f-lunge">
+     <line x1="-6" y1="30" x2="-44" y2="56" stroke="#fff" stroke-width="7" stroke-linecap="round"/><line x1="-44" y1="56" x2="-66" y2="88" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+     <line x1="8" y1="30" x2="40" y2="56" stroke="#fff" stroke-width="7" stroke-linecap="round"/><line x1="40" y1="56" x2="42" y2="88" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+     <path d="M-6 -18 L18 -14 L12 34 L-10 32Z" fill="#fff"/>
+     <line x1="12" y1="-12" x2="52" y2="-12" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+     <line x1="52" y1="-12" x2="140" y2="-12" stroke="#b8c3cf" stroke-width="2.5"/>
+     <polyline points="-4,-12 -30,-6 -52,6" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+   </g>
+   <ellipse cx="2" cy="-34" rx="12" ry="14" fill="#2a3340"/><path d="M-8 -24 Q2 -18 12 -24 L10 -16 Q2 -12 -6 -16z" fill="#fff"/>
+   <rect x="-8" y="-6" width="18" height="8" fill="${color}" opacity=".9"/>
+  </g></g>`;
+}
+document.getElementById("strip").innerHTML=`<svg class="stripsvg" viewBox="0 0 700 170" aria-hidden="true">
+  <rect x="0" y="120" width="700" height="34" fill="#3e4c5e"/>
+  <rect x="0" y="120" width="100" height="34" fill="#6b3442"/><rect x="600" y="120" width="100" height="34" fill="#6b3442"/>
+  <line x1="350" y1="120" x2="350" y2="154" stroke="#fff" stroke-width="3"/><line x1="250" y1="120" x2="250" y2="154" stroke="#8fd3ff" stroke-width="3"/><line x1="450" y1="120" x2="450" y2="154" stroke="#8fd3ff" stroke-width="3"/>
+  <g transform="translate(0,50)">${fencerG("fL","#e2384d",false)}${fencerG("fR","#2fbf6b",true)}</g>
+  <text x="50" y="168" font-size="12" fill="#eef3f8" text-anchor="middle" font-family="Fredoka">warning zone</text><text x="650" y="168" font-size="12" fill="#eef3f8" text-anchor="middle" font-family="Fredoka">warning zone</text>
+</svg>`;
+const ACTS=[
+  {k:"adv",t:"Advance",s:"step forward",c:""},{k:"ret",t:"Retreat",s:"step back",c:""},{k:"lunge",t:"Lunge",s:"attack!",c:"atk"},
+  {k:"p4",t:"Parry 4",s:"guard inside",c:"def"},{k:"p6",t:"Parry 6",s:"guard outside",c:"def"},{k:"fleche",t:"Flèche",s:"running attack",c:"atk"}
+];
+document.getElementById("acts").innerHTML=ACTS.map(a=>`<button type="button" class="${a.c}" data-k="${a.k}">${a.t}<small>${a.s}</small></button>`).join("");
+document.querySelectorAll("#acts button").forEach(b=>b.onclick=()=>exchange(b.dataset.k));
+const say=(fr,en)=>{document.getElementById("ref").innerHTML=`Referee: "${fr}" <i>(${en})</i>`;if(document.getElementById("voice").checked)LG.speak(fr,"fr-FR")};
+const coach=t=>document.getElementById("coach").innerHTML=`<b>Coach:</b> ${t}`;
+function lights(r,g,w){["lR","lG","lW1","lW2"].forEach(i=>document.getElementById(i).classList.remove("on"));
+  if(r)document.getElementById("lR").classList.add("on");if(g)document.getElementById("lG").classList.add("on");
+  if(w==="L")document.getElementById("lW1").classList.add("on");if(w==="R")document.getElementById("lW2").classList.add("on");}
+function place(){document.getElementById("fL").style.transform=`translate(${X(B.pl)}px,0)`;document.getElementById("fR").style.transform=`translate(${X(B.op)}px,0)`;
+  document.getElementById("scL").textContent=B.sL;document.getElementById("scR").textContent=B.sR}
+function setBusy(v){B.busy=v;document.querySelectorAll("#acts button").forEach(b=>b.disabled=v||B.over||(b.dataset.k==="fleche"&&W==="sabre"))}
+function planAI(){
+  const gap=B.op-B.pl,r=Math.random();let a;
+  if(gap<=2)a=r<.42?"lunge":r<.72?"parry":r<.87?"ret":"adv";
+  else if(gap===3)a=r<.4?"adv":r<.52&&W!=="sabre"?"fleche":r<.72?"parry":r<.86?"ret":"lunge";
+  else a=r<.68?"adv":r<.82?"ret":r<.92?"parry":"lunge";
+  if(a==="ret"&&B.op>=5)a="adv";
+  if(a==="adv"&&gap<=1)a="parry";
+  B.plan={a,line:Math.random()<.5?4:6};
+  // tells: mostly honest, sometimes hard to read
+  const honest=Math.random()<.78;const p=B.plan;let t;
+  if(!honest)t="Hard to read them right now. Stay balanced!";
+  else if(p.a==="lunge"||p.a==="fleche")t=`Their back leg is loading up… <b>they look ready to attack</b>, blade drifting toward your <b>${p.line===4?"inside (4)":"outside (6)"}</b>.`;
+  else if(p.a==="parry")t="Their blade is steady and waiting. <b>They look ready to defend.</b>";
+  else if(p.a==="adv")t="They're <b>inching forward</b>, front foot creeping.";
+  else t="They're <b>leaning back</b>, weight on the back leg.";
+  document.getElementById("tell").innerHTML=`<b>Watch them:</b> ${t}`;
+}
+function startPoint(first){
+  B.pl=-2;B.op=2;lights();place();
+  say("En garde! Prêts? Allez!","Ready stance! Ready? Fence!");
+  if(first)coach(`Get to the right <b>distance</b> before you attack. A lunge only reaches when you're close (2 steps or less). In ${W==="epee"?"épée, anywhere on the body counts":W==="foil"?"foil, only the torso counts":"sabre, everything above the waist counts"}.`);
+  planAI();setBusy(false);
+}
+function newBout(){B.sL=0;B.sR=0;B.over=false;B.touches=0;startPoint(true)}
+document.getElementById("newBout").onclick=()=>{LG.click();newBout()};
+async function lungeAnim(id){const g=document.getElementById(id);g.classList.add("lunging");await LG.sleep(380);}
+function recover(){document.getElementById("fL").classList.remove("lunging");document.getElementById("fR").classList.remove("lunging")}
+async function exchange(pa){
+  if(B.busy||B.over)return;setBusy(true);LG.click();
+  const oa=B.plan.a,line=B.plan.line;
+  const isAtk=a=>a==="lunge"||a==="fleche";
+  // footwork first
+  if(pa==="adv"&&B.op-B.pl>1)B.pl+=1;
+  if(pa==="ret")B.pl-=1;
+  if(pa==="fleche")B.pl+=1;
+  if(oa==="adv"&&B.op-B.pl>1)B.op-=1;
+  if(oa==="ret")B.op+=1;
+  if(oa==="fleche")B.op-=1;
+  if(B.op-B.pl<1){B.op=B.pl+1}
+  place();await LG.sleep(260);
+  // back line
+  if(B.pl<-7){B.pl=-7;place();return score("R","You backed off the end of the piste with both feet. That's a touch for your opponent!","Watch the <b>warning zone</b>: when you're in it, stop retreating and parry or attack instead.")}
+  if(B.op>7){B.op=7;place();return score("L","Your opponent backed off the end of the piste. Touch for you!","Pushing someone toward their back line is a real strategy. They run out of room!")}
+  const gap=B.op-B.pl;
+  const reach=a=>a==="lunge"?gap<=2:a==="fleche"?gap<=3:false;
+  if(isAtk(pa))lungeAnim("fL");if(isAtk(oa))lungeAnim("fR");
+  await LG.sleep(isAtk(pa)||isAtk(oa)?420:120);
+  const pHit=isAtk(pa)&&reach(pa),oHit=isAtk(oa)&&reach(oa);
+  const pParry=pa==="p4"||pa==="p6";
+  // resolve
+  if(pHit&&oHit){
+    if(W==="epee"){B.sL++;B.sR++;lights(1,1);LG.tone(440,.2);say("Halte! Coup double.","Stop! Double touch.");coach("In épée there's no right of way, so you <b>both</b> get a point. Épée fencers try to hit first, or hit while staying out of reach.");return after()}
+    lights(1,1);LG.tone(330,.15);say("Halte! Attaque simultanée.","Stop! Simultaneous attack.");
+    coach(`In ${W}, when both fencers attack at the same time, nobody scores. That's <b>right of way</b>. Try to start your attack first, or parry theirs.`);return after(true);
+  }
+  if(pHit){
+    if(oa==="parry"&&Math.random()<.5){lights(0,1);return score("R","They parried your lunge and riposted!","They were waiting for you. Against a defender, try a <b>feint</b> later in practice, or attack when they step forward.")}
+    if(W==="foil"&&Math.random()<.15){lights(0,0,"L");LG.tone(500,.1);say("Halte! Pas valable.","Stop! Off target.");coach("White light! You hit their arm or mask. In foil only the torso counts. Aim for the chest.");return after(true)}
+    lights(1,0);return score("L",pa==="fleche"?"Your flèche flew in like an arrow!":"Your lunge landed!",oa==="adv"?"They stepped forward right into your lunge. Attacking when your opponent advances is a pro move.":oa==="ret"?"Even though they backed up, you were close enough. Great distance!":"You picked the right distance to attack.");
+  }
+  if(oHit){
+    if(pParry){
+      if((pa==="p4"&&line===4)||(pa==="p6"&&line===6)){lights(1,0);return score("L",`Parry ${line===4?4:6}, riposte! Touch!`,"Parry then riposte: you blocked their blade and hit back. Your riposte has right of way.")}
+      lights(0,1);return score("R",`Wrong parry! They attacked your ${line===4?"inside (4)":"outside (6)"}.`,`Watch the tell for where their blade is going. Inside means parry 4, outside means parry 6.`);
+    }
+    if(W==="foil"&&Math.random()<.12){lights(0,0,"R");LG.tone(500,.1);say("Halte! Pas valable.","Stop! Off target.");coach("Their touch hit your arm. In foil that's off-target: white light, no point. Lucky!");return after(true)}
+    lights(0,1);return score("R","They landed their attack.",pa==="adv"?"You stepped forward right into their lunge. When they look ready to attack, try a parry or a retreat.":pa==="ret"?"You retreated, but not far enough. They were already close.":isAtk(pa)?"Your attack fell short while theirs reached. Get closer before you lunge.":"When the tell says they're attacking, get your parry ready.");
+  }
+  // nobody hit
+  let msg;
+  if(isAtk(pa))msg=`Too far! Your ${pa==="lunge"?"lunge":"flèche"} fell short (you were ${gap} steps apart). Get to 2 steps or less before you lunge.`;
+  else if(isAtk(oa))msg=pa==="ret"?"Nice! You retreated and their attack fell short.":"Their attack fell short. They were too far away.";
+  else if(pParry&&oa!=="lunge")msg="You parried, but they didn't attack. That's okay: a parry is a safe move when you're unsure.";
+  else msg=gap<=2?`You're at lunge distance (${gap} steps). Attack or defend!`:`Distance: ${gap} steps. ${gap>3?"Advance to get closer.":"One more step and you can lunge."}`;
+  coach(msg);
+  if(isAtk(pa)||isAtk(oa))await LG.sleep(300);
+  recover();planAI();setBusy(false);
+}
+async function after(noScore){place();await LG.sleep(1200);recover();if(checkEnd())return;startPoint(false)}
+async function score(who,headline,lesson){
+  if(who==="L"){B.sL++;LG.happy();say("Halte! Touche à gauche.","Stop! Point to the left.")}
+  else{B.sR++;LG.sad();say("Halte! Touche à droite.","Stop! Point to the right.")}
+  coach(`<b>${headline}</b> ${lesson}`);place();
+  await LG.sleep(1500);recover();if(checkEnd())return;startPoint(false);
+}
+function checkEnd(){
+  if(B.sL>=5||B.sR>=5){
+    B.over=true;setBusy(true);
+    if(B.sL>B.sR){won++;LG.store.set("fence-won",won);document.getElementById("boutsWon").textContent=won;LG.fanfare();LG.confetti(50,["#e2384d","#fff","#8fd3ff"]);LG.banner("You win the bout!",`${B.sL} to ${B.sR}`)}
+    else if(B.sL===B.sR)LG.banner("It's a tie!",`${B.sL} to ${B.sR}`);
+    else LG.banner("Bout over",`${B.sL} to ${B.sR}. Try again!`);
+    say("Salut!","Salute!");coach("The bout is over. Salute your opponent, take off your mask, and shake hands. Tap <b>New bout</b> to fence again.");
+    document.getElementById("tell").innerHTML="";
+    return true;
+  }
+  return false;
+}
+
+/* ---------- 6. Quiz ---------- */
+LG.quiz(document.getElementById("quizBox"),[
+  {q:"What are the three fencing weapons?",c:["Foil, épée and sabre","Sword, knife and spear","Foil, rapier and dagger","Sabre, katana and épée"],why:"Foil, épée and sabre. Each has its own target and rules."},
+  {q:"In foil, where does a hit count?",c:["The torso only","The whole body","Above the waist, including the arms","Only the mask"],why:"Foil target = torso. Arms, legs and head are off-target."},
+  {q:"In épée, where does a hit count?",c:["The whole body, even the foot","The torso only","Above the waist","The arms only"],why:"Épée is the whole body."},
+  {q:"Which weapon lets you score by slashing with the edge?",c:["Sabre","Foil","Épée","None of them"],why:"Sabre scores with the tip and the edge."},
+  {q:"What does the referee say to start?",c:["En garde! Prêts? Allez!","Ready, set, go!","Touché!","Halte!"],why:"En garde, prêts, allez: stance, ready, go!"},
+  {q:"What does \"Halte!\" mean?",c:["Stop!","Go!","Point!","Salute!"],why:"Halte = stop."},
+  {q:"What is a riposte?",c:["Your hit right after a successful parry","A step backward","A fake attack","The fencing strip"],why:"Parry, then riposte!"},
+  {q:"What's the main attack in fencing called?",c:["The lunge (fente)","The jump","The spin","The flèche only"],why:"The lunge: arm first, then a big step with the front foot."},
+  {q:"Which weapon does NOT have right of way?",c:["Épée","Foil","Sabre","All of them have it"],why:"In épée, whoever hits first scores, and both can score together."},
+  {q:"In foil, the white light means…",c:["An off-target hit: no point","A point for the left fencer","A double touch","The bout is over"],why:"White = off-target in foil. Red and green are valid touches."},
+  {q:"What goes on BEFORE the fencing jacket?",c:["The underarm protector","The mask","The glove","The lamé"],why:"The underarm protector (plastron) goes under the jacket."},
+  {q:"Why is only one glove worn?",c:["It goes on your weapon hand only","The other hand is lucky","Gloves are optional","To show your team"],why:"Only the weapon hand gets a glove, and its cuff covers the body cord."},
+  {q:"How long is a fencing piste?",c:["14 meters","100 meters","5 meters","40 meters"],why:"14 meters long and only 1.5 to 2 meters wide."},
+  {q:"What happens if you retreat off the back of the piste with both feet?",c:["Your opponent gets a touch","Nothing","You get a point","The bout restarts at 0"],why:"That's why the warning zone is there!"},
+  {q:"Parry 4 protects your…",c:["Inside line","Outside line","Legs","Back"],why:"Parry 4 (quarte) protects the inside; parry 6 (sixte) protects the outside."},
+  {q:"Which attack is NOT allowed in sabre?",c:["The flèche (running attack)","The lunge","The riposte","The beat"],why:"Sabre fencers can't cross their feet moving forward, so no flèche."},
+  {q:"What happens at the end of a bout?",c:["Salute and shake hands","Run off the piste","Throw your mask","Nothing"],why:"Salute and shake hands. Refusing can earn a black card!"}
+],{key:"fence-quiz",count:10});
+
+LG.tabs("fencing",id=>{if(id==="bout"&&!B.started){B.started=true;newBout()}});
+</script>
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tennis Academy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Fredoka:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Tennis Academy: hard-court blue with optic-yellow ball accents. Single theme by choice. */
+:root{--bg:#123a5e;--fg:#f2f8ff;--panel:#1b4b75;--panel-2:#245a8a;--card:#f6fbff;--card-ink:#0f2c47;--accent:#d7f35a;--on-accent:#18300a;--muted:#567089;
+  --court:#2f74b5;--out:#3f8a54}
+.court svg{width:100%;height:auto;display:block}
+.hotspot.on .hs-ring{stroke:var(--gold);stroke-width:6}
+.scoreboard{display:grid;grid-template-columns:1fr auto auto;gap:4px 14px;background:#0b2238;border-radius:12px;padding:10px 14px;font-variant-numeric:tabular-nums;align-items:center;max-width:420px}
+.scoreboard .nm{font-weight:600;display:flex;align-items:center;gap:6px}
+.scoreboard .g{font-family:var(--display);font-size:22px;color:#fff;text-align:center;min-width:34px}
+.scoreboard .p{font-family:var(--display);font-size:22px;color:var(--accent);text-align:center;min-width:48px}
+.scoreboard .hd{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;opacity:.7;text-align:center}
+.srv{width:12px;height:12px;border-radius:50%;background:var(--accent);display:inline-block;visibility:hidden}
+.srv.on{visibility:visible}
+.ump{background:var(--card);color:var(--card-ink);border-radius:12px;padding:10px 14px;font-family:var(--display);font-size:clamp(18px,4.8vw,24px);min-height:52px}
+.ump small{display:block;font-family:var(--body);font-size:15px;color:var(--muted);margin-top:2px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.split{grid-template-columns:1fr}}
+table.st{border-collapse:collapse;width:100%;font-size:16px}
+table.st td,table.st th{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,.1);text-align:left}
+.opts{display:grid;gap:8px}
+.opts button{text-align:left;line-height:1.25}
+.opts button small{display:block;font-weight:400;font-size:13px;opacity:.75}
+.ctx{display:grid;gap:4px}
+.ctx h3{font-family:var(--display);font-weight:400;font-size:20px;margin:0}
+.matchcourt{background:var(--out);border-radius:14px;padding:6px}
+.matchcourt svg{width:100%;height:auto;display:block}
+#ballG,#youG,#oppG{transition:transform .55s cubic-bezier(.3,.1,.3,1)}
+@media (prefers-reduced-motion:reduce){#ballG,#youG,#oppG{transition:none}}
+.result{font-weight:600}
+.result.good{color:#c9f7a0}.result.oops{color:#ffc2c9}
+.mode{display:flex;gap:8px;flex-wrap:wrap}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);outline:3px solid var(--gold);outline-offset:-3px}
+.ballrow{display:flex;gap:12px;flex-wrap:wrap}
+.ballrow div{display:grid;justify-items:center;gap:2px;font-size:14px;text-align:center;width:88px}
+.ballrow i{width:42px;height:42px;border-radius:50%;display:block;border:2px solid rgba(0,0,0,.15)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="game-head">
+    <h1>Tennis Academy<small>Court smarts before court time</small></h1>
+    <div class="chips"><div class="chip">Matches won <b id="mWon">0</b></div></div>
+  </header>
+
+  <nav class="sub" aria-label="Tennis lessons">
+    <button data-tab="court">1 · The court</button>
+    <button data-tab="score">2 · Scoring</button>
+    <button data-tab="strokes">3 · Strokes &amp; grips</button>
+    <button data-tab="gear">4 · Gear</button>
+    <button data-tab="match">5 · Play a match!</button>
+    <button data-tab="quiz">6 · Quiz</button>
+  </nav>
+
+  <!-- 1. Court -->
+  <section data-panel="court">
+    <p class="lead">A full tennis court is 78 feet long. It's 27 feet wide for singles and 36 feet wide for doubles. Tap any part of the court.</p>
+    <div class="panel court" id="courtBox"></div>
+    <div class="card info" id="courtInfo" aria-live="polite"><h3>Tap a line or area</h3><p>Every line on the court has a job.</p></div>
+    <div class="cards">
+      <div class="card"><h3>Is it in?</h3><p>If <b>any part</b> of the ball touches the line, it's <b>in</b>. In matches without umpires, you call the lines on your side, and if you're not sure, it's in.</p></div>
+      <div class="card"><h3>Serving rules</h3><ul><li>Stand behind the baseline, on one side of the center mark</li><li>Serve diagonally into the box across the net</li><li>You get 2 tries. Miss one = <b>fault</b>. Miss both = <b>double fault</b> (you lose the point)</li><li>Ball touches the net but lands in? That's a <b>let</b>: serve again</li><li>Stepping on the baseline before you hit = <b>foot fault</b></li></ul></div>
+      <div class="card"><h3>Kid-size courts</h3><p>Younger players use smaller courts: a 36-foot court with red balls, then a 60-foot court with orange balls, then the full court with green balls. Around age 10, most kids move to the green ball on the big court.</p></div>
+    </div>
+  </section>
+
+  <!-- 2. Scoring -->
+  <section data-panel="score">
+    <p class="lead">Tennis scoring sounds strange at first. Win points to win games, win games to win sets, win sets to win the match. Press the buttons and listen to the umpire.</p>
+    <div class="split">
+      <div style="display:grid;gap:10px">
+        <div id="trainBoard"></div>
+        <div class="ump" id="trainCall" aria-live="polite">Love all<small>Nobody has scored yet. "Love" means zero.</small></div>
+        <div class="row"><button type="button" class="primary" id="tA">Lennox wins the point</button><button type="button" id="tB">Opponent wins the point</button></div>
+        <button type="button" id="tR" style="justify-self:start">Reset</button>
+      </div>
+      <div class="card">
+        <h3>How a game is scored</h3>
+        <table class="st"><tr><th>Points won</th><th>Called</th></tr><tr><td>0</td><td>Love</td></tr><tr><td>1</td><td>15</td></tr><tr><td>2</td><td>30</td></tr><tr><td>3</td><td>40</td></tr><tr><td>4</td><td>Game (if 2 ahead)</td></tr></table>
+        <ul><li>The <b>server's score is said first</b>: "30–15" means the server has 30.</li><li>Tied at 40–40 is <b>deuce</b>. Win the next point for <b>advantage</b>; win again to take the game. Lose it and it's back to deuce.</li><li>A <b>set</b> is won by the first to 6 games, ahead by 2. At 6–6, play a <b>tiebreak</b>: first to 7 points, ahead by 2 (counted 1, 2, 3…).</li><li>Players switch serving every game and change ends after odd games (1, 3, 5…).</li><li>Most matches are best of 3 sets. Kids' events often use shorter sets (first to 4 games).</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Strokes -->
+  <section data-panel="strokes">
+    <p class="lead">Every tennis shot has a name. Here's what each one is for and how pros hit it.</p>
+    <div class="cards" id="strokeCards"></div>
+    <h2>Grips: how you hold the racquet</h2>
+    <div class="cards">
+      <div class="card"><h3>Continental</h3><p><b>"Hold it like a hammer."</b> Put the racquet's edge down and shake hands with the handle.</p><p class="muted">Use it for: serves, volleys, overheads, slices.</p></div>
+      <div class="card"><h3>Eastern forehand</h3><p><b>"Shake hands with the racquet."</b> Strings face the side; your palm is flat behind the handle.</p><p class="muted">Use it for: flat, solid forehands. Great first forehand grip.</p></div>
+      <div class="card"><h3>Semi-western</h3><p>Turn your hand a little further under the handle than Eastern.</p><p class="muted">Use it for: topspin forehands, which most pros use today.</p></div>
+      <div class="card"><h3>Two-handed backhand</h3><p>Bottom hand in continental, top hand in an eastern forehand grip, hands touching.</p><p class="muted">Most kids learn the two-hander first: it's stronger and steadier.</p></div>
+    </div>
+    <div class="card"><h3>Footwork: the secret weapon</h3><ul>
+      <li><b>Ready position:</b> feet wide, knees bent, racquet in front, weight on the balls of your feet.</li>
+      <li><b>Split step:</b> a little hop right as your opponent hits. It wakes up your legs so you can push off in any direction.</li>
+      <li><b>Unit turn:</b> turn your shoulders and hips together as soon as you see which side the ball is going.</li>
+      <li><b>Recover:</b> after every shot, move back toward the middle of the baseline.</li></ul></div>
+  </section>
+
+  <!-- 4. Gear -->
+  <section data-panel="gear">
+    <div class="split">
+      <div class="panel court" id="racquetBox"></div>
+      <div class="card info" id="racquetInfo" aria-live="polite"><h3>Parts of a racquet</h3><p>Tap a part of the racquet.</p></div>
+    </div>
+    <div class="cards">
+      <div class="card"><h3>Racquet size</h3><p>Junior racquets are measured by length in inches.</p><table class="st"><tr><td>21"</td><td>about ages 4–5</td></tr><tr><td>23"</td><td>about ages 6–7</td></tr><tr><td>25"</td><td>about ages 8–10</td></tr><tr><td>26"</td><td>about ages 10–12</td></tr><tr><td>27"</td><td>adult size</td></tr></table><p class="muted">Height matters more than age. Standing straight, the tip should reach about to your hip with your arm hanging down.</p></div>
+      <div class="card"><h3>Balls</h3><div class="ballrow">
+        <div><i style="background:#e2384d"></i>Red<br><span class="muted">slowest, 36-ft court</span></div>
+        <div><i style="background:#f28c28"></i>Orange<br><span class="muted">60-ft court</span></div>
+        <div><i style="background:radial-gradient(circle at 50% 50%,#d7f35a 55%,#3f9b4a 56%)"></i>Green dot<br><span class="muted">full court, slower</span></div>
+        <div><i style="background:#d7f35a"></i>Yellow<br><span class="muted">regular ball</span></div></div>
+        <p class="muted">Slower balls bounce lower so kids can hit real strokes at the right height.</p></div>
+      <div class="card"><h3>Shoes &amp; extras</h3><ul><li><b>Tennis shoes:</b> flat soles and strong sides for quick side-to-side moves. Running shoes are built for going forward and can roll.</li><li><b>Overgrip:</b> a thin wrap on the handle for better grip. Replace it when it gets slick.</li><li><b>Dampener:</b> a little rubber piece in the strings that quiets the "ping."</li><li>Water, a hat and sunscreen for outdoor courts.</li></ul></div>
+      <div class="card"><h3>Court manners</h3><ul><li>Wait for a point to end before walking behind another court</li><li>Roll stray balls back between points, not during</li><li>Server announces the score before each point</li><li>Shake hands at the net after the match</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 5. Match -->
+  <section data-panel="match">
+    <div class="row" style="justify-content:space-between">
+      <div class="mode" id="mode"><button type="button" data-n="1" aria-pressed="false">Quick game</button><button type="button" data-n="4" aria-pressed="true">Short set (first to 4)</button></div>
+      <button type="button" id="newMatch">New match</button>
+    </div>
+    <div class="split">
+      <div style="display:grid;gap:10px">
+        <div class="matchcourt" id="mcourt"></div>
+        <div id="matchBoard"></div>
+        <div class="ump" id="matchCall" aria-live="polite"></div>
+      </div>
+      <div class="panel" style="display:grid;gap:12px">
+        <div class="ctx" id="ctx"></div>
+        <div class="opts" id="opts"></div>
+        <div class="result" id="result" aria-live="polite"></div>
+        <div class="tip" id="mcoach" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Quiz -->
+  <section data-panel="quiz"><div class="panel" id="quizBox"></div></section>
+  <footer>Made with love for Lennox</footer>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/* ---------- 1. Court (10 px = 1 ft) ---------- */
+document.getElementById("courtBox").innerHTML=`<svg viewBox="-40 -40 860 440" role="img" aria-label="Tennis court seen from above">
+  <rect x="-40" y="-40" width="860" height="440" fill="#3f8a54" rx="10"/>
+  <rect x="0" y="0" width="780" height="360" fill="#2f74b5"/>
+  <g class="hotspot" data-k="nomans"><rect class="hs-ring" x="0" y="45" width="180" height="270" fill="#2f74b5" stroke="none"/><rect x="600" y="45" width="180" height="270" fill="#2f74b5"/>
+    <rect x="30" y="140" width="120" height="80" fill="transparent"/></g>
+  <g class="hotspot" data-k="alley"><rect class="hs-ring" x="0" y="0" width="780" height="45" fill="#3a7fbf" stroke="none"/><rect x="0" y="315" width="780" height="45" fill="#3a7fbf"/></g>
+  <g class="hotspot" data-k="deuce"><rect class="hs-ring" x="180" y="180" width="210" height="135" fill="#2a6aa6" stroke="none"/><rect x="390" y="45" width="210" height="135" fill="#2a6aa6"/></g>
+  <g class="hotspot" data-k="ad"><rect class="hs-ring" x="180" y="45" width="210" height="135" fill="#2b6fae" stroke="none"/><rect x="390" y="180" width="210" height="135" fill="#2b6fae"/></g>
+  <g fill="none" stroke="#fff" stroke-width="4">
+    <rect x="0" y="0" width="780" height="360"/><line x1="0" y1="45" x2="780" y2="45"/><line x1="0" y1="315" x2="780" y2="315"/>
+    <line x1="180" y1="45" x2="180" y2="315"/><line x1="600" y1="45" x2="600" y2="315"/><line x1="180" y1="180" x2="600" y2="180"/>
+    <line x1="0" y1="180" x2="10" y2="180"/><line x1="770" y1="180" x2="780" y2="180"/></g>
+  <g class="hotspot" data-k="baseline"><line class="hs-ring" x1="0" y1="0" x2="0" y2="360" stroke="#fff" stroke-width="6"/><line x1="780" y1="0" x2="780" y2="360" stroke="#fff" stroke-width="6"/><rect x="-24" y="0" width="34" height="360" fill="transparent"/><rect x="770" y="0" width="34" height="360" fill="transparent"/></g>
+  <g class="hotspot" data-k="center"><circle class="hs-ring" cx="5" cy="180" r="14" fill="transparent" stroke="#f2b134" stroke-width="3"/><circle cx="775" cy="180" r="14" fill="transparent" stroke="#f2b134" stroke-width="3"/></g>
+  <g class="hotspot" data-k="service"><line class="hs-ring" x1="180" y1="45" x2="180" y2="315" stroke="#fff" stroke-width="5"/><rect x="168" y="45" width="24" height="270" fill="transparent"/><rect x="588" y="45" width="24" height="270" fill="transparent"/></g>
+  <g class="hotspot" data-k="cline"><line class="hs-ring" x1="180" y1="180" x2="600" y2="180" stroke="#fff" stroke-width="5"/><rect x="190" y="170" width="190" height="20" fill="transparent"/><rect x="400" y="170" width="190" height="20" fill="transparent"/></g>
+  <g class="hotspot" data-k="singles"><line class="hs-ring" x1="0" y1="45" x2="780" y2="45" stroke="#fff" stroke-width="5"/><rect x="190" y="35" width="400" height="20" fill="transparent"/><rect x="190" y="305" width="400" height="20" fill="transparent"/></g>
+  <g class="hotspot" data-k="net"><line class="hs-ring" x1="390" y1="-24" x2="390" y2="384" stroke="#e8eef5" stroke-width="7" stroke-dasharray="3 3"/><rect x="376" y="-24" width="28" height="408" fill="transparent"/>
+    <circle cx="390" cy="-24" r="7" fill="#59616f"/><circle cx="390" cy="384" r="7" fill="#59616f"/></g>
+  <g font-family="Fredoka,sans-serif" font-size="20" font-weight="600" fill="#fff" text-anchor="middle" pointer-events="none">
+    <text x="285" y="118">Ad box</text><text x="285" y="255">Deuce box</text><text x="90" y="186">No-man's land</text><text x="390" y="28" fill="#fff">NET</text>
+    <text x="390" y="-28" font-size="16" opacity=".9">doubles alley</text></g>
+</svg>`;
+LG.hotspots(document.getElementById("courtBox"),{
+  baseline:{t:"Baseline",d:"The back line at each end. You serve from behind it, and most rallies are played near it."},
+  center:{t:"Center mark",d:"The little tick in the middle of the baseline. When you serve, you stand just to one side of it."},
+  service:{t:"Service line",d:"21 feet from the net. A serve must land in front of this line, inside the correct service box."},
+  cline:{t:"Center service line",d:"Splits the service area into two boxes, left and right."},
+  deuce:{t:"Deuce box",d:"The right-side box (from the server's view). Every game starts with a serve from the right, into the deuce box crosscourt."},
+  ad:{t:"Ad box",d:"The left-side box. After the first point you switch sides with every serve. The 'ad' point is always served here."},
+  singles:{t:"Singles sideline",d:"In singles, the ball must land inside these lines. The court is 27 feet wide."},
+  alley:{t:"Doubles alleys",d:"The extra 4½-foot strips on each side. They're only in play for doubles, making the court 36 feet wide. They don't count for the serve."},
+  net:{t:"Net",d:"3 feet high in the middle and 3½ feet at the posts. That's why hitting crosscourt over the low middle is safer. A ball can touch the net and keep going in a rally; on a serve that's a 'let.'"},
+  nomans:{t:"No-man's land",d:"The area between the service line and baseline. Balls land at your feet here, so don't hang around! Either stay back at the baseline or move all the way to the net."}
+},document.getElementById("courtInfo"));
+
+/* ---------- Scoring engine ---------- */
+const PT=["Love","15","30","40"];
+function newScore(n){return{p:[0,0],g:[0,0],n,tb:false,tbFirst:0,server:0,done:false,winner:-1}}
+function tbServer(S){const k=S.p[0]+S.p[1];if(k===0)return S.tbFirst;return Math.floor((k-1)/2)%2===0?1-S.tbFirst:S.tbFirst}
+function callOf(S,names){
+  const [a,b]=S.p;
+  if(S.tb){if(a===b)return `${a} all`;const l=a>b?0:1;return `${Math.max(a,b)}–${Math.min(a,b)}, ${names[l]}`}
+  if(a>=3&&b>=3){if(a===b)return"Deuce";return `Advantage ${names[a>b?0:1]}`}
+  const s=S.server;const x=S.p[s],y=S.p[1-s];
+  if(x===y)return x===0?"Love all":`${PT[x]} all`;
+  return `${PT[x]}–${PT[y].toLowerCase()}`;
+}
+function addPoint(S,w,names){
+  if(S.done)return{};
+  S.p[w]++;const [a,b]=S.p;let ev={type:"point"};
+  const gameWon=S.tb?(S.p[w]>=7&&S.p[w]-S.p[1-w]>=2):(S.p[w]>=4&&S.p[w]-S.p[1-w]>=2);
+  if(gameWon){
+    S.g[w]++;const wasTB=S.tb;S.p=[0,0];
+    if(wasTB||(S.g[w]>=S.n&&S.g[w]-S.g[1-w]>=2)||(S.n===1)){S.done=true;S.winner=w;ev={type:"set",wasTB};}
+    else{ev={type:"game"};
+      if(S.g[0]===S.n&&S.g[1]===S.n&&S.n>1){S.tb=true;S.server=1-S.server;S.tbFirst=S.server;ev.tbStart=true}
+      else S.server=1-S.server;
+      ev.change=(S.g[0]+S.g[1])%2===1;}
+  }
+  if(S.tb&&!S.done)S.server=tbServer(S);
+  return ev;
+}
+function boardHTML(S,names){
+  const sv=S.tb?tbServer(S):S.server;
+  const pts=i=>S.done?"":S.tb?S.p[i]:(S.p[0]>=3&&S.p[1]>=3?(S.p[0]===S.p[1]?"40":S.p[i]>S.p[1-i]?"AD":"40"):PT[S.p[i]]);
+  return `<div class="scoreboard" aria-label="Scoreboard"><span></span><span class="hd">Games</span><span class="hd">${S.tb?"Tiebreak":"Points"}</span>
+    ${[0,1].map(i=>`<span class="nm"><i class="srv ${sv===i&&!S.done?"on":""}" title="serving"></i>${names[i]}</span><span class="g">${S.g[i]}</span><span class="p">${pts(i)}</span>`).join("")}</div>`;
+}
+
+/* scoring trainer */
+const TN=["Lennox","Opponent"];let TS=newScore(6);
+function trainRender(ev,w){
+  document.getElementById("trainBoard").innerHTML=boardHTML(TS,TN);
+  let big,small;
+  if(!ev){big="Love all";small="Nobody has scored yet. \"Love\" means zero. Lennox is serving."}
+  else if(ev.type==="set"){big=`Game, set, ${TN[w]}!`;small=`${TN[w]} wins the set ${Math.max(...TS.g)}–${Math.min(...TS.g)}${ev.wasTB?" in a tiebreak":""}. Press Reset to play again.`;LG.fanfare();LG.confetti(30)}
+  else if(ev.type==="game"){big=`Game, ${TN[w]}`;small=`Games: Lennox ${TS.g[0]}, Opponent ${TS.g[1]}. ${ev.tbStart?"6 games all: TIEBREAK! First to 7 points, win by 2.":`Now ${TN[TS.server]} serves.`}${ev.change?" Change ends!":""}`}
+  else{big=callOf(TS,TN);const [a,b]=TS.p;
+    small=TS.tb?"Tiebreak points count 1, 2, 3… First to 7, win by 2.":big==="Deuce"?"40–40 is called deuce. You need to win two points in a row now.":big.startsWith("Advantage")?`One more point and ${big.slice(10)} wins the game.`:`The server (${TN[TS.server]}) is said first.`}
+  document.getElementById("trainCall").innerHTML=`${big}<small>${small}</small>`;
+}
+document.getElementById("tA").onclick=()=>{if(TS.done)return;LG.click();const e=addPoint(TS,0,TN);trainRender(e,0)};
+document.getElementById("tB").onclick=()=>{if(TS.done)return;LG.click();const e=addPoint(TS,1,TN);trainRender(e,1)};
+document.getElementById("tR").onclick=()=>{TS=newScore(6);LG.click();trainRender()};
+trainRender();
+
+/* ---------- 3. Strokes ---------- */
+const STROKES=[
+  {t:"Forehand",w:"Your most-used shot, hit on your racquet-hand side.",how:["Unit turn: shoulders sideways","Racquet drops below the ball","Swing low to high","Hit the ball out in front of you","Finish over your opposite shoulder"]},
+  {t:"Backhand",w:"Hit on your non-racquet side, with one hand or two.",how:["Turn early so your back shoulder points at the net","Racquet low behind you","Swing up and through","Contact beside your front hip","Finish high"]},
+  {t:"Serve",w:"Starts every point. The only shot you control completely.",how:["Sideways stance, front foot angled at the net post","Toss up and slightly in front","'Trophy pose': elbow up, racquet behind your back","Reach up and hit at the highest point","Follow through across your body"]},
+  {t:"Return of serve",w:"Hitting back the other player's serve.",how:["Stand near the baseline in ready position","Split step as they hit","Short backswing: the ball is fast","Aim deep and crosscourt"]},
+  {t:"Volley",w:"Hitting the ball out of the air, usually near the net.",how:["Continental grip","Racquet up in front of you","No big swing: a short 'punch'","Step toward the ball","Firm wrist"]},
+  {t:"Overhead smash",w:"Crushing a high ball, like a serve.",how:["Turn sideways fast","Point at the ball with your free hand","Racquet up behind you","Hit it at the top and snap down"]},
+  {t:"Lob",w:"A high shot over an opponent at the net, or to buy time.",how:["Open the racquet face (tilt it up)","Swing low to high, with lift","Aim deep, near the baseline"]},
+  {t:"Drop shot",w:"A soft shot that lands just over the net.",how:["Disguise it like a normal shot","Slice under the ball gently","Use it when they're far behind the baseline"]},
+  {t:"Topspin vs. slice",w:"Topspin makes the ball dip and kick up; slice makes it float and skid low.",how:["Topspin: brush up the back of the ball","Slice: brush down and under it","Pros mix both to keep opponents guessing"]}
+];
+document.getElementById("strokeCards").innerHTML=STROKES.map(s=>`<div class="card"><h3>${s.t}</h3><p>${s.w}</p><ul>${s.how.map(h=>`<li>${h}</li>`).join("")}</ul></div>`).join("");
+
+/* ---------- 4. Racquet ---------- */
+document.getElementById("racquetBox").innerHTML=`<svg viewBox="0 0 300 420" role="img" aria-label="Tennis racquet with labeled parts">
+  <g class="hotspot" data-k="head"><ellipse class="hs-ring" cx="150" cy="120" rx="96" ry="112" fill="none" stroke="#e2384d" stroke-width="14"/></g>
+  <g class="hotspot" data-k="strings"><ellipse cx="150" cy="120" rx="86" ry="102" fill="#ffffff14"/>
+    ${Array.from({length:13},(_,i)=>`<line x1="${78+i*12}" y1="26" x2="${78+i*12}" y2="214" stroke="#f6fbff" stroke-width="1.6" clip-path="url(#hc)"/>`).join("")}
+    ${Array.from({length:15},(_,i)=>`<line x1="62" y1="${30+i*13}" x2="238" y2="${30+i*13}" stroke="#f6fbff" stroke-width="1.6" clip-path="url(#hc)"/>`).join("")}
+    <defs><clipPath id="hc"><ellipse cx="150" cy="120" rx="86" ry="102"/></clipPath></defs><ellipse class="hs-ring" cx="150" cy="120" rx="86" ry="102" fill="none" stroke="transparent" stroke-width="2"/></g>
+  <g class="hotspot" data-k="sweet"><circle class="hs-ring" cx="150" cy="132" r="26" fill="#d7f35a55" stroke="#d7f35a" stroke-width="3"/></g>
+  <g class="hotspot" data-k="throat"><path class="hs-ring" d="M110 222 L150 290 L190 222 L176 222 L150 268 L124 222 Z" fill="#e2384d" stroke="#e2384d" stroke-width="2"/></g>
+  <g class="hotspot" data-k="grip"><rect class="hs-ring" x="136" y="290" width="28" height="98" rx="8" fill="#1d2430" stroke="#1d2430" stroke-width="2"/>
+    ${Array.from({length:7},(_,i)=>`<line x1="136" y1="${300+i*13}" x2="164" y2="${306+i*13}" stroke="#3a4656" stroke-width="2"/>`).join("")}</g>
+  <g class="hotspot" data-k="butt"><rect class="hs-ring" x="132" y="386" width="36" height="16" rx="6" fill="#59616f" stroke="#59616f" stroke-width="2"/></g>
+</svg>`;
+LG.hotspots(document.getElementById("racquetBox"),{
+  head:{t:"Head (frame)",d:"The big oval part. A bigger head is more forgiving; a smaller head gives more control."},
+  strings:{t:"Strings",d:"The up-and-down strings are 'mains' and the side-to-side ones are 'crosses.' Tighter strings mean more control; looser strings mean more power."},
+  sweet:{t:"Sweet spot",d:"The center of the strings. Hit the ball here and it feels smooth and goes fast. Miss it and the racquet twists and buzzes."},
+  throat:{t:"Throat",d:"The open triangle that connects the head to the handle."},
+  grip:{t:"Handle and grip",d:"Where you hold it. The handle has 8 flat sides called bevels; your knuckles line up on them to make each grip."},
+  butt:{t:"Butt cap",d:"The very end of the handle. Many players rest their pinky against it."}
+},document.getElementById("racquetInfo"));
+
+/* ---------- 5. Match ---------- */
+const CTX={
+  ret:{t:"Return of serve",d:"Their serve is coming in fast to your forehand.",opts:[
+    {t:"Deep return crosscourt",q:"good",why:"A safe, deep return starts the point even. That's what pros do."},
+    {t:"Block it back down the middle",q:"ok",why:"Not fancy, but in! Middle returns take away their angles."},
+    {t:"Smash a winner down the line",q:"bad",why:"Going for a winner off a fast serve is very risky. First, just get it back deep."}]},
+  rally:{t:"Baseline rally",d:"You're both at the baseline. A deep ball comes to you.",opts:[
+    {t:"Crosscourt, deep",q:"good",why:"Crosscourt is the safest shot: the court is longer diagonally and the net is lowest in the middle."},
+    {t:"Down the line",q:"ok",why:"Down the line changes direction, but it's riskier: shorter court, higher net near the posts."},
+    {t:"Drop shot from the baseline",q:"bad",why:"A drop shot from way back has too far to travel. Save it for when you're inside the court."},
+    {t:"High looping ball (moonball)",q:"ok",why:"A high, deep ball buys time and pushes them back, but it's not an attack."}]},
+  short:{t:"Short ball!",d:"Their shot lands short, near your service line.",opts:[
+    {t:"Approach shot deep, then rush the net",q:"good",next:"net",why:"A short ball is your invitation to attack. Hit deep and move in."},
+    {t:"Drop shot",q:"good",next:"drop",why:"From inside the court, a drop shot can win the point when they're far back."},
+    {t:"Hit it and back up to the baseline",q:"ok",why:"Safe, but you gave away a chance to attack."}]},
+  net:{t:"Volley time",d:"You're at the net. Their ball comes at net height.",you:"net",opts:[
+    {t:"Short punch volley into the open court",q:"good",next:"net",why:"Short punch, no big swing, angled away. That's a winning volley."},
+    {t:"Big swing like a groundstroke",q:"bad",why:"No backswing at the net! A volley is a short punch with a firm wrist."},
+    {t:"Let it bounce first",q:"bad",why:"At the net, letting it bounce puts the ball at your feet. Volley it out of the air."}]},
+  lob:{t:"Lob over you!",d:"You're at the net and they throw up a short, high lob.",you:"net",opts:[
+    {t:"Overhead smash",q:"good",next:"net",why:"Turn sideways, point at the ball, and smash it like a serve."},
+    {t:"Let it bounce, then hit a groundstroke",q:"ok",why:"Safe on a very high lob, but it gives them time to recover."},
+    {t:"Tap it back softly",q:"bad",why:"A soft reply to a short lob just gives them another chance. Smash it!"}]},
+  oppnet:{t:"They rushed the net",d:"Your opponent is at the net. You're at the baseline.",opp:"net",opts:[
+    {t:"Passing shot down the line",q:"good",why:"Low and hard into the open lane, past them."},
+    {t:"Lob over their head",q:"good",why:"When they're close to the net, a high lob over them is perfect."},
+    {t:"Hit it right at them",q:"bad",why:"Hitting straight to a net player gives them an easy volley."}]},
+  wide:{t:"Pulled wide",d:"They hit a sharp angle. You're stretched out past the sideline.",opts:[
+    {t:"High, deep defensive shot to buy time",q:"good",why:"When you're in trouble, hit high and deep, then get back to the middle. Pros do this constantly."},
+    {t:"Go for a winner",q:"bad",why:"Going for a winner while stretched out usually ends in an error."},
+    {t:"Medium-speed shot to the middle",q:"ok",why:"Okay, but it sits up for them to attack."}]},
+  drop:{t:"Drop shot!",d:"They hit a soft drop shot that barely clears the net.",opts:[
+    {t:"Sprint in and push it crosscourt",q:"good",next:"net",why:"Run in fast and place it away from them, then stay at the net."},
+    {t:"Sprint in and lob it over them",q:"ok",why:"Possible, but tricky from so close."},
+    {t:"Stay back and wait",q:"bad",lose:true,why:"If you stay back it bounces twice. Always chase a drop shot!"}]}
+};
+const ODDS={good:[.32,.58],ok:[.14,.64],bad:[.06,.30]}; // [win, continue], rest = error
+const MN=["Lennox","Opponent"];
+let M={S:null,n:4,serveNo:1,ctx:null,busy:false};
+let mWon=LG.store.get("tennis-won",0);document.getElementById("mWon").textContent=mWon;
+document.getElementById("mcourt").innerHTML=`<svg viewBox="-20 -20 820 400" aria-hidden="true">
+  <rect x="0" y="0" width="780" height="360" fill="#2f74b5"/>
+  <g fill="none" stroke="#fff" stroke-width="4"><rect x="0" y="0" width="780" height="360"/><line x1="0" y1="45" x2="780" y2="45"/><line x1="0" y1="315" x2="780" y2="315"/>
+  <line x1="180" y1="45" x2="180" y2="315"/><line x1="600" y1="45" x2="600" y2="315"/><line x1="180" y1="180" x2="600" y2="180"/></g>
+  <line x1="390" y1="-14" x2="390" y2="374" stroke="#e8eef5" stroke-width="6"/>
+  <g id="youG"><circle r="20" fill="#e4572e" stroke="#fff" stroke-width="4"/><text y="7" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="Fredoka">L</text></g>
+  <g id="oppG"><circle r="20" fill="#59616f" stroke="#fff" stroke-width="4"/><text y="7" text-anchor="middle" font-size="20" font-weight="700" fill="#fff" font-family="Fredoka">O</text></g>
+  <g id="ballG"><circle r="9" fill="#d7f35a" stroke="#6e8a12" stroke-width="2"/></g>
+</svg>`;
+const mv=(id,x,y)=>document.getElementById(id).style.transform=`translate(${x}px,${y}px)`;
+function posPlayers(you,opp){mv("youG",you==="net"?300:-6,you==="wide"?344:you==="net"?200:180);mv("oppG",opp==="net"?480:786,opp==="wide"?20:180)}
+function ballTo(side,y){mv("ballG",side==="L"?LG.pick([60,110,150]):side==="R"?LG.pick([630,680,720]):side==="net"?390:side,y??LG.pick([90,150,220,270]))}
+document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{M.n=+b.dataset.n;document.querySelectorAll("#mode button").forEach(x=>x.setAttribute("aria-pressed",x===b));LG.click();newMatch()});
+document.getElementById("newMatch").onclick=()=>{LG.click();newMatch()};
+function mRender(){document.getElementById("matchBoard").innerHTML=boardHTML(M.S,MN)}
+function mCall(big,small=""){document.getElementById("matchCall").innerHTML=`${big}${small?`<small>${small}</small>`:""}`}
+function result(t,cls){const r=document.getElementById("result");r.textContent=t;r.className="result "+(cls||"")}
+function mcoach(t){const c=document.getElementById("mcoach");if(!t){c.hidden=true;return}c.hidden=false;c.innerHTML=`<b>Coach:</b> ${t}`}
+function server(){return M.S.tb?tbServer(M.S):M.S.server}
+function newMatch(){M.S=newScore(M.n);M.serveNo=1;mRender();mCall("Love all",`${M.n===1?"One game":"First to 4 games, tiebreak at 4–4"}. Lennox serves first.`);result("");mcoach("");startPoint()}
+function setOpts(title,desc,opts,onPick){
+  document.getElementById("ctx").innerHTML=`<h3>${title}</h3><p>${desc}</p>`;
+  const box=document.getElementById("opts");
+  box.innerHTML=opts.map((o,i)=>`<button type="button" data-i="${i}">${o.t}${o.s?`<small>${o.s}</small>`:""}</button>`).join("");
+  box.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(M.busy)return;LG.click();box.querySelectorAll("button").forEach(x=>x.disabled=true);onPick(opts[+b.dataset.i])});
+}
+function startPoint(){
+  M.busy=false;const sv=server();
+  const side=(M.S.p[0]+M.S.p[1])%2===0?"deuce (right)":"ad (left)";
+  if(sv===0){
+    posPlayers("base","base");mv("ballG",-6,190);
+    setOpts(M.serveNo===1?"Your serve":"Second serve",`Serve into the ${side} box, diagonally across the net.${M.serveNo===2?" Careful: miss this one and it's a double fault!":""}`,[
+      {t:"Big flat serve",s:"fast, but lands in less often",k:"flat"},{t:"Spin serve",s:"slower, but very reliable",k:"spin"}],o=>serve(o.k));
+  }else{
+    posPlayers("base","base");mv("ballG",786,170);
+    setOpts("Their serve","Get in your ready position and split step as they hit.",[{t:"Ready! Split step",s:"a little hop as they serve",k:"go"}],()=>oppServe());
+  }
+}
+async function serve(k){
+  M.busy=true;const inP=k==="flat"?(M.serveNo===1?.6:.55):.88;const ace=k==="flat"?.3:.07;
+  ballTo("R");await LG.sleep(560);
+  if(Math.random()>inP){
+    if(M.serveNo===1){M.serveNo=2;result("Fault! Out. You get a second serve.","oops");LG.tone(300,.1);
+      mcoach(k==="flat"?"First serves can be big. On the second serve, most players switch to a safe spin serve.":"Even spin serves miss sometimes. Stay relaxed.");return startPoint()}
+    M.serveNo=1;result("Double fault! Two misses = point to your opponent.","oops");
+    mcoach(k==="flat"?"A big flat second serve is risky. A spin serve lands in much more often: that's why pros use it on second serves.":"Unlucky! Breathe, bounce the ball, and take your time on the next one.");
+    return pointTo(1);
+  }
+  M.serveNo=1;
+  if(Math.random()<ace){result("ACE! They couldn't even touch it.","good");mcoach(k==="flat"?"A big serve to the right spot can win the point by itself.":"A sneaky spin serve ace!");return pointTo(0)}
+  if(k==="flat"&&Math.random()<.2){ballTo("L");result("Your serve forced a weak return into the net!","good");mcoach("A strong serve puts pressure on the returner.");return pointTo(0)}
+  await LG.sleep(150);ballTo("L");result("Serve is in! Here comes the return…");
+  play(Math.random()<.7?"rally":"short");
+}
+async function oppServe(){
+  M.busy=true;ballTo("L");await LG.sleep(560);
+  const r=Math.random();
+  if(r<.1){result("Fault… then a double fault! Point to you.","good");mcoach("Pressure makes servers miss. Being ready helps too!");return pointTo(0)}
+  if(r<.17){result("Ace! Their serve was too fast.","oops");mcoach("Aces happen, even to pros. Stand ready, split step, and keep your backswing short.");return pointTo(1)}
+  result("");play("ret");
+}
+function play(key){
+  M.busy=false;const C=CTX[key];M.ctx=key;
+  posPlayers(C.you||"base",C.opp||"base");
+  setOpts(C.t,C.d,LG.shuffle(C.opts),o=>shot(o));
+}
+async function shot(o){
+  M.busy=true;
+  if(o.lose){result("It bounced twice. Point to your opponent.","oops");mcoach(o.why);return pointTo(1)}
+  const [w,c]=ODDS[o.q],r=Math.random();
+  ballTo("R");await LG.sleep(560);
+  if(r<w){result(LG.pick(["Winner! They couldn't reach it.","Clean winner!","They couldn't get it back!"]),"good");mcoach(o.why);return pointTo(0)}
+  if(r>=w+c){result(LG.pick(["Into the net…","Just long…","Wide. Out by a little."]),"oops");mcoach(o.why);return pointTo(1)}
+  // ball stays in play: does the opponent miss?
+  if(Math.random()<.16){result("In! And they missed their reply.","good");mcoach(o.why);return pointTo(0)}
+  mcoach(o.why);
+  let next=o.next;
+  if(next==="net"){const r2=Math.random();next=r2<.2?"passed":r2<.45?"lob":"net"}
+  if(!next){const r3=Math.random();next=r3<.45?"rally":r3<.65?"short":r3<.8?"wide":r3<.9?"drop":"oppnet"}
+  ballTo("L");await LG.sleep(560);
+  if(next==="passed"){result("They hit a passing shot right by you.","oops");mcoach("Even good approaches get passed sometimes. Pros cover the line their opponent is most likely to hit.");return pointTo(1)}
+  result("Good shot. The rally keeps going!");
+  play(next);
+}
+async function pointTo(w){
+  const ev=addPoint(M.S,w,MN);if(w===0)LG.happy();else LG.sad();
+  mRender();await LG.sleep(400);
+  if(ev.type==="set"){
+    const youWon=w===0;
+    mCall(`Game${M.n>1?", set":""} and match, ${MN[w]}!`,`${M.S.g[0]}–${M.S.g[1]}${ev.wasTB?" (won in a tiebreak)":""}. Shake hands at the net!`);
+    if(youWon){mWon++;LG.store.set("tennis-won",mWon);document.getElementById("mWon").textContent=mWon;LG.fanfare();LG.confetti(50,["#d7f35a","#fff","#2f74b5"]);LG.banner("You win!",`${M.S.g[0]}–${M.S.g[1]}`)}
+    else LG.banner("Match over","Tap New match for a rematch!");
+    setOpts("Match over","Tap New match to play again.",[],()=>{});return;
+  }
+  if(ev.type==="game"){
+    mCall(`Game, ${MN[w]}`,`Games ${M.S.g[0]}–${M.S.g[1]}. ${ev.tbStart?"4 all: TIEBREAK! First to 7 points, win by 2.":`${MN[M.S.server]} serves next.`}${ev.change?" Change ends.":""}`);
+  }else{
+    const c=callOf(M.S,MN);
+    mCall(c,M.S.tb?`Tiebreak. ${MN[server()]} serves.`:c==="Deuce"?"40–40: win two in a row to take the game.":c.startsWith("Advantage")?"One more point wins the game!":`${MN[M.S.server]} is serving, so their score is said first.`);
+  }
+  await LG.sleep(900);startPoint();
+}
+
+/* ---------- 6. Quiz ---------- */
+LG.quiz(document.getElementById("quizBox"),[
+  {q:"What does \"love\" mean in tennis?",c:["Zero","Tied","A point","Game over"],why:"Love = zero. \"15–love\" means 15 to 0."},
+  {q:"What comes after 30 in a game?",c:["40","45","50","Game"],why:"Love, 15, 30, 40, game."},
+  {q:"What is it called when the score is 40–40?",c:["Deuce","Advantage","Love all","Tiebreak"],why:"40–40 is deuce. Win two points in a row to win the game."},
+  {q:"The server has 30 and the returner has 15. The umpire says…",c:["30–15","15–30","30 all","Advantage server"],why:"The server's score always comes first."},
+  {q:"How many games do you need to win a normal set?",c:["6, ahead by 2","4","10","3"],why:"6 games, win by 2. At 6–6 you play a tiebreak."},
+  {q:"How many tries do you get to serve?",c:["2","1","3","As many as you want"],why:"Miss the first: fault. Miss both: double fault, and you lose the point."},
+  {q:"The serve touches the net and lands in the box. That's…",c:["A let: serve again","A fault","A point for the server","A double fault"],why:"A let means you replay that serve."},
+  {q:"The ball lands on the line. Is it in or out?",c:["In","Out","Replay the point","Depends on the umpire's mood"],why:"Any part of the ball on the line is in."},
+  {q:"Why is crosscourt the safest rally shot?",c:["The court is longer diagonally and the net is lowest in the middle","It's faster","The other player can't reach it","It's a rule"],why:"More court plus a lower net = more room for error."},
+  {q:"Your opponent is at the net, close in. Which shot is smart?",c:["A lob over their head","Hit it right at them","A drop shot","A moonball to the middle"],why:"Lob or passing shot. Never feed a net player an easy volley."},
+  {q:"Which grip is used for serves and volleys?",c:["Continental (\"hammer grip\")","Western","Two-handed","Fist grip"],why:"Continental works for serves, volleys and overheads."},
+  {q:"What's a split step?",c:["A little hop as your opponent hits","A type of serve","Splitting the court in half","Stepping on the line"],why:"The split step gets your legs ready to move in any direction."},
+  {q:"Where's the best part of the strings to hit the ball?",c:["The sweet spot in the center","The frame","Near the throat","The very top edge"],why:"The sweet spot gives the most power and control."},
+  {q:"How high is the net in the middle?",c:["3 feet","5 feet","2 feet","4 feet"],why:"3 feet in the center, 3½ at the posts."},
+  {q:"At the net, how should you hit a volley?",c:["Short punch, no big swing","Full big swing","Let it bounce first","Hit it underhand"],why:"Volleys are short punches with a firm wrist."},
+  {q:"Which ball do most 10-year-olds use on a full court?",c:["Green dot ball","Red ball","Bowling ball","Orange ball always"],why:"Green dot balls are a bit slower and help you move to the full court."}
+],{key:"tennis-quiz",count:10});
+
+LG.tabs("tennis",id=>{if(id==="match"&&!M.S)newMatch()});
+</script>
+</body>
+</html>

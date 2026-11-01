@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chess Academy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Fredoka:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Chess Academy: a walnut-and-felt club room. Single theme by choice. */
+:root{--bg:#2b2420;--fg:#fbf3e4;--panel:#3a302a;--panel-2:#4a3d35;--card:#fbf3e4;--card-ink:#2b2420;--accent:#e9c99a;--on-accent:#2b2420;--muted:#7a6a5e;
+  --light:#f0d9b5;--dark:#b58863}
+.boardwrap{display:grid;gap:10px;justify-items:center}
+.board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));width:min(100%,440px);aspect-ratio:1;border:6px solid #5a4636;border-radius:8px;overflow:hidden;
+  box-shadow:0 6px 0 rgba(0,0,0,.3);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.sq{position:relative;display:grid;place-items:center;border:none;border-radius:0;padding:0;box-shadow:none;background:var(--light);color:inherit;
+  font-size:min(8.4vw,44px);line-height:1;cursor:pointer;min-width:0;min-height:0;overflow:hidden}
+.sq.d{background:var(--dark)}
+.sq:active:not(:disabled){transform:none;box-shadow:none}
+.sq:focus-visible{outline:3px solid #2f6fd6;outline-offset:-3px;z-index:1}
+.sq .coord{position:absolute;font-size:10px;font-weight:600;opacity:.7;pointer-events:none;font-family:var(--body)}
+.sq .cf{bottom:1px;right:3px}.sq .cr{top:1px;left:3px}
+.sq.d .coord{color:var(--light)}.sq:not(.d) .coord{color:var(--dark)}
+.pc{font-family:"Segoe UI Symbol","Noto Sans Symbols 2","DejaVu Sans",serif;pointer-events:none;transition:transform .15s}
+.pc.w{color:#fff;text-shadow:0 0 1px #000,0 0 1px #000,1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,0 2px 2px rgba(0,0,0,.35)}
+.pc.b{color:#1d1a18;text-shadow:0 0 1px #fff8,0 2px 2px rgba(0,0,0,.25)}
+.sq.sel{background:#f6e27a}.sq.d.sel{background:#d9c14e}
+.sq.last{box-shadow:inset 0 0 0 4px rgba(47,111,214,.55)}
+.sq.hintsq{box-shadow:inset 0 0 0 5px #2f9e5b}
+.sq .dot{position:absolute;width:30%;height:30%;border-radius:50%;background:rgba(30,30,30,.28);pointer-events:none}
+.sq .ring{position:absolute;inset:6%;border-radius:50%;border:5px solid rgba(209,73,91,.6);pointer-events:none}
+.sq .star{position:absolute;width:70%;height:70%;pointer-events:none;animation:twinkle 2s ease-in-out infinite}
+@keyframes twinkle{50%{transform:scale(.88) rotate(8deg)}}
+.sq .rock{width:72%;height:72%;pointer-events:none}
+.sq.mate .pc{animation:topple .8s forwards}
+@keyframes topple{to{transform:rotate(80deg) translateY(10%);opacity:.6}}
+@media (prefers-reduced-motion:reduce){.sq .star{animation:none}.sq.mate .pc{animation:none;opacity:.5}}
+.pieces{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.pieces button{display:grid;justify-items:center;gap:0;padding:8px 2px 6px;font-size:13px;line-height:1.1}
+.pieces button .pc{font-size:34px}
+.pieces button[aria-pressed="true"]{background:var(--accent);outline:3px solid var(--gold);outline-offset:-3px}
+.split{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.split{grid-template-columns:1fr}}
+.value{font-family:var(--display);font-size:16px;background:var(--gold);color:#2b2420;padding:3px 12px;border-radius:999px;display:inline-block}
+.levels{display:flex;gap:6px;flex-wrap:wrap}
+.levels button{padding:8px 12px;font-size:15px}
+.levels button[aria-pressed="true"]{background:var(--accent);outline:3px solid var(--gold);outline-offset:-3px}
+.levels small{display:block;color:#b58b2a;font-size:12px;letter-spacing:1px}
+.status{font-weight:600;min-height:1.4em}
+.status.good{color:#8fe0a8}.status.oops{color:#ffb3bd}
+.rhyme{font-family:var(--display);font-size:17px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="game-head">
+    <h1>Chess Academy<small>Learn it one piece at a time</small></h1>
+    <div class="chips"><div class="chip">Stars <b id="starCount">0</b></div><div class="chip">Mates <b id="mateCount">0</b></div></div>
+  </header>
+
+  <nav class="sub" aria-label="Chess lessons">
+    <button data-tab="pieces">1 · Meet the pieces</button>
+    <button data-tab="hunt">2 · Star hunt</button>
+    <button data-tab="mate">3 · Checkmate puzzles</button>
+    <button data-tab="coach">4 · Coach's rules</button>
+    <button data-tab="quiz">5 · Quiz</button>
+  </nav>
+
+  <!-- 1. Pieces -->
+  <section data-panel="pieces">
+    <p class="lead">Every chess army has 16 pieces: 1 king, 1 queen, 2 rooks, 2 bishops, 2 knights and 8 pawns. Tap a piece to see where it can go. The dots are squares it can move to; red circles are pieces it can capture.</p>
+    <div class="pieces" id="pieceBtns"></div>
+    <div class="split">
+      <div class="boardwrap"><div class="board" id="learnBoard" aria-label="Practice board"></div>
+        <button type="button" id="setupBtn">Show the starting setup</button></div>
+      <div class="card" id="pieceCard" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- 2. Star hunt -->
+  <section data-panel="hunt">
+    <p class="lead">Move your piece to collect every star. Rocks block the way (except for the knight, who can jump!). Try to match the coach's move count for 3 stars.</p>
+    <div class="levels" id="levelBtns"></div>
+    <div class="split">
+      <div class="boardwrap"><div class="board" id="huntBoard" aria-label="Star hunt board"></div></div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h2 id="huntTitle"></h2>
+        <p id="huntText"></p>
+        <div class="chips"><div class="chip">Moves <b id="huntMoves">0</b></div><div class="chip">Coach did it in <b id="huntPar">0</b></div></div>
+        <div class="status" id="huntStatus" aria-live="polite"></div>
+        <div class="row"><button type="button" id="huntReset">Start over</button><button type="button" class="primary" id="huntNext">Next level</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Checkmate -->
+  <section data-panel="mate">
+    <div class="cards">
+      <div class="card"><h3>Check</h3><p>The king is being attacked. You must get out of check on your very next move: move the king, block, or capture the attacker.</p></div>
+      <div class="card"><h3>Checkmate</h3><p>The king is in check and there is <b>no way out</b>. Game over, you win! (You never actually capture the king.)</p></div>
+      <div class="card"><h3>Stalemate</h3><p>Not in check, but no legal move at all. That's a <b>draw</b>, not a win. So when you're way ahead, always leave the enemy king a move!</p></div>
+    </div>
+    <div class="levels" id="puzBtns"></div>
+    <div class="split">
+      <div class="boardwrap"><div class="board" id="mateBoard" aria-label="Checkmate puzzle board"></div></div>
+      <div class="panel" style="display:grid;gap:10px">
+        <span class="tag" style="justify-self:start">White to move · mate in 1</span>
+        <h2 id="puzTitle"></h2>
+        <p id="puzText"></p>
+        <div class="status" id="puzStatus" aria-live="polite"></div>
+        <div class="row"><button type="button" id="puzHint">Hint</button><button type="button" id="puzReset">Reset</button><button type="button" class="primary" id="puzNext">Next puzzle</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Coach -->
+  <section data-panel="coach">
+    <p class="lead">Top kids' chess coaches teach the same way: learn one piece at a time with mini-games, then solve puzzles every day, then play and review real games. Here are the rules they drill into every new player.</p>
+    <div class="cards">
+      <div class="card"><h3>Before every move: CCT</h3><p>Look for <b>C</b>hecks, <b>C</b>aptures and <b>T</b>hreats, for you <i>and</i> your opponent. Ask: "What does their last move want to do?"</p></div>
+      <div class="card"><h3>Opening: the first 10 moves</h3><ul><li>Take the center with a pawn (e4 or d4)</li><li>Bring out knights and bishops</li><li>Castle early to keep your king safe</li><li>Don't bring the queen out too soon</li><li>Don't move the same piece twice without a reason</li><li>Connect your rooks</li></ul></div>
+      <div class="card"><h3>Count the points</h3><p>Pawn 1 · Knight 3 · Bishop 3 · Rook 5 · Queen 9. Only trade when you get equal or more points back. If you're ahead, trading pieces makes winning easier.</p></div>
+      <div class="card"><h3>Knight on the rim is dim</h3><p>A knight in the middle can reach 8 squares. In a corner it reaches only 2. Keep knights near the center.</p></div>
+      <div class="card"><h3>Tournament manners</h3><ul><li><b>Touch-move:</b> touch a piece, you must move it</li><li>Shake hands before and after</li><li>Say "good game," win or lose</li><li>Most games use a chess clock: hit it with the same hand you moved with</li></ul></div>
+      <div class="card"><h3>How players improve</h3><ul><li>Solve a few puzzles every day</li><li>Play slower games, not just speed chess</li><li>Go over your losses: find the move that went wrong</li><li>Learn the basic checkmates: queen + king, and rook + king</li></ul></div>
+      <div class="card"><h3>Words to know</h3><ul><li><b>Fork:</b> one piece attacks two at once (knights love forks)</li><li><b>Pin:</b> a piece can't move without exposing something bigger behind it</li><li><b>Skewer:</b> a pin in reverse: the big piece is in front</li><li><b>Develop:</b> bring pieces off the back row</li><li><b>Blunder:</b> a big mistake</li></ul></div>
+      <div class="card"><h3>Reading a chess move</h3><p>Columns are <b>files</b> a–h. Rows are <b>ranks</b> 1–8. Every square has a name like e4. Pieces use letters: K king, Q queen, R rook, B bishop, N knight (K was taken!). <b>Nf3</b> = knight to f3. <b>x</b> = capture, <b>+</b> = check, <b>#</b> = checkmate, <b>O-O</b> = castle.</p></div>
+    </div>
+  </section>
+
+  <!-- 5. Quiz -->
+  <section data-panel="quiz"><div class="panel" id="quizBox"></div></section>
+
+  <footer>Made with love for Lennox</footer>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/*ENGINE*/
+const FILES="abcdefgh";
+const sq=n=>(8-+n[1])*8+FILES.indexOf(n[0]);
+const nm=i=>FILES[i%8]+(8-Math.floor(i/8));
+const ORTH=[[1,0],[-1,0],[0,1],[0,-1]],DIAG=[[1,1],[1,-1],[-1,1],[-1,-1]],KN=[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
+function rays(b,i,dirs,slide,me){
+  const out=[],r0=Math.floor(i/8),c0=i%8;
+  for(const [dr,dc] of dirs){let r=r0+dr,c=c0+dc;
+    while(r>=0&&r<8&&c>=0&&c<8){const j=r*8+c,t=b[j];
+      if(!t)out.push(j);else{if(t!=="X"&&t[0]!==me)out.push(j);break}
+      if(!slide)break;r+=dr;c+=dc}}
+  return out;
+}
+function pseudo(b,i,attacksOnly){
+  const p=b[i];if(!p||p==="X")return[];
+  const me=p[0],t=p[1];
+  if(t==="R")return rays(b,i,ORTH,1,me);
+  if(t==="B")return rays(b,i,DIAG,1,me);
+  if(t==="Q")return rays(b,i,ORTH.concat(DIAG),1,me);
+  if(t==="N")return rays(b,i,KN,0,me);
+  if(t==="K")return rays(b,i,ORTH.concat(DIAG),0,me);
+  const dir=me==="w"?-1:1,r=Math.floor(i/8),c=i%8,out=[];
+  for(const dc of [-1,1]){const rr=r+dir,cc=c+dc;if(rr<0||rr>7||cc<0||cc>7)continue;const j=rr*8+cc;
+    if(attacksOnly||(b[j]&&b[j]!=="X"&&b[j][0]!==me))out.push(j)}
+  if(!attacksOnly&&r+dir>=0&&r+dir<8){const j=(r+dir)*8+c;
+    if(!b[j]){out.push(j);const j2=(r+2*dir)*8+c;if(r===(me==="w"?6:1)&&!b[j2])out.push(j2)}}
+  return out;
+}
+function attacked(b,i,by){for(let j=0;j<64;j++)if(b[j]&&b[j]!=="X"&&b[j][0]===by&&pseudo(b,j,true).includes(i))return true;return false}
+function doMove(b,f,t){const n=b.slice();n[t]=n[f];n[f]=null;if(n[t]&&n[t][1]==="P"&&(t<8||t>55))n[t]=n[t][0]+"Q";return n}
+function inCheck(b,c){const k=b.indexOf(c+"K");return k>=0&&attacked(b,k,c==="w"?"b":"w")}
+function legal(b,i){const c=b[i][0];return pseudo(b,i).filter(t=>!inCheck(doMove(b,i,t),c))}
+function anyLegal(b,c){for(let i=0;i<64;i++)if(b[i]&&b[i]!=="X"&&b[i][0]===c&&legal(b,i).length)return true;return false}
+function isMate(b,c){return inCheck(b,c)&&!anyLegal(b,c)}
+function parse(s){const b=Array(64).fill(null);s.trim().split(/\s+/).forEach(tok=>{const [p,list]=tok.split(":");list.split(",").forEach(n=>b[sq(n)]=p)});return b}
+function mates(b){const out=[];for(let i=0;i<64;i++)if(b[i]&&b[i][0]==="w")for(const t of legal(b,i))if(isMate(doMove(b,i,t),"b"))out.push(nm(i)+nm(t));return out}
+/*END*/
+
+const GLYPH={K:"♚",Q:"♛",R:"♜",B:"♝",N:"♞",P:"♟"};
+const NAME={K:"King",Q:"Queen",R:"Rook",B:"Bishop",N:"Knight",P:"Pawn"};
+const pcHTML=p=>`<span class="pc ${p[0]}" aria-hidden="true">${GLYPH[p[1]]}︎</span>`;
+const STAR=`<svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.2l7.1-.6z" fill="#f2b134" stroke="#8a5a00" stroke-width="1.2"/></svg>`;
+const ROCK=`<svg class="rock" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18 L6 9 L11 5 L17 7 L21 13 L19 19 Z" fill="#8c8580" stroke="#4b4642" stroke-width="1.4"/><path d="M8 11 l3 -2 M14 10 l3 3" stroke="#5f5955" stroke-width="1.2"/></svg>`;
+
+/* Generic board renderer. opts: {pieces, stars:Set, sel, dots, rings, last, hint, mate, onTap} */
+function drawBoard(el,o){
+  if(!el._built){
+    el.innerHTML="";el.setAttribute("role","grid");
+    for(let i=0;i<64;i++){const r=Math.floor(i/8),c=i%8;const b=document.createElement("button");b.type="button";
+      b.className="sq"+((r+c)%2?" d":"");b.dataset.i=i;el.append(b)}
+    el.addEventListener("click",e=>{const s=e.target.closest(".sq");if(s&&el._tap)el._tap(+s.dataset.i)});
+    el._built=true;
+  }
+  el._tap=o.onTap;
+  [...el.children].forEach((b,i)=>{
+    const p=o.pieces[i],r=Math.floor(i/8),c=i%8;
+    let h="";
+    if(c===0)h+=`<span class="coord cr">${8-r}</span>`;
+    if(r===7)h+=`<span class="coord cf">${FILES[c]}</span>`;
+    if(p==="X")h+=ROCK;else if(p)h+=pcHTML(p);
+    if(o.stars&&o.stars.has(i))h+=STAR;
+    if(o.dots&&o.dots.includes(i))h+=(p&&p!=="X")?`<span class="ring"></span>`:`<span class="dot"></span>`;
+    b.innerHTML=h;
+    b.classList.toggle("sel",o.sel===i);b.classList.toggle("last",!!(o.last&&o.last.includes(i)));
+    b.classList.toggle("hintsq",o.hint===i);b.classList.toggle("mate",o.mate===i);
+    let label=nm(i)+(p==="X"?", rock":p?`, ${p[0]==="w"?"white":"black"} ${NAME[p[1]].toLowerCase()}`:"")+(o.stars&&o.stars.has(i)?", star":"")+(o.dots&&o.dots.includes(i)?", can move here":"");
+    b.setAttribute("aria-label",label);
+  });
+}
+
+/* ---------- 1. Meet the pieces ---------- */
+const PIECES={
+  K:{at:"d4",val:"Priceless",moves:"One square in any direction: up, down, sideways or diagonal.",
+     power:"<b>Castling:</b> once per game, the king slides 2 squares toward a rook and the rook hops over to the other side. Allowed only if neither piece has moved, nothing is between them, and the king isn't in check or passing through check.",
+     tip:"Protect him! Lose the king and you lose the game. Late in the game, when the queens are gone, the king becomes a strong fighter."},
+  Q:{at:"d4",val:"9 points",moves:"Any number of squares in a straight line or diagonal. She's a rook and a bishop combined.",
+     power:"The most powerful piece on the board. She can attack from far away.",
+     tip:"Don't bring her out too early. The other side will chase her around and get free moves."},
+  R:{at:"d4",val:"5 points",moves:"Any number of squares straight up, down, left or right. No diagonals.",
+     power:"Rooks are amazing in the endgame and on open files (columns with no pawns).",
+     tip:"Two rooks side by side are 'connected' and protect each other. A rook on the 7th rank is a monster."},
+  B:{at:"d4",val:"3 points",moves:"Any number of squares diagonally.",
+     power:"A bishop stays on its starting color <b>forever</b>. That's why you get one light-square and one dark-square bishop.",
+     tip:"Keeping both bishops (the 'bishop pair') is a small advantage, especially in open positions."},
+  N:{at:"d4",val:"3 points",moves:"An <b>L-shape</b>: two squares one way, then one square to the side.",
+     power:"The only piece that can <b>jump over</b> other pieces. It always lands on the opposite color.",
+     tip:"'A knight on the rim is dim.' From the middle it reaches 8 squares; from a corner only 2. Knights are the kings of forks."},
+  P:{at:"e2",val:"1 point",moves:"Forward one square. On its very first move it may go two. It <b>captures diagonally</b> forward, one square.",
+     power:"<b>Promotion:</b> reach the last row and the pawn becomes a queen (or rook, bishop or knight). <b>En passant:</b> if an enemy pawn jumps two squares and lands right beside your pawn, you can capture it as if it moved only one, but only on your very next move.",
+     tip:"Pawns can't move backward, so think before you push. Pawns protect each other best in a diagonal chain."}
+};
+let learnPiece="N";
+document.getElementById("pieceBtns").innerHTML=Object.keys(PIECES).map(k=>`<button type="button" data-k="${k}" aria-pressed="false">${pcHTML("w"+k)}${NAME[k]}</button>`).join("");
+document.querySelectorAll("#pieceBtns button").forEach(b=>b.onclick=()=>{LG.click();learnPiece=b.dataset.k;showPiece()});
+function showPiece(){
+  document.querySelectorAll("#pieceBtns button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===learnPiece));
+  const P=PIECES[learnPiece],b=Array(64).fill(null),at=sq(P.at);b[at]="w"+learnPiece;
+  if(learnPiece==="P"){b[sq("d3")]="bP";b[sq("f3")]="bN"}
+  else if(learnPiece!=="K"){b[sq("f6")]="bP";if(learnPiece==="N"){b[sq("c3")]="wP";b[sq("d3")]="wP";b[sq("e3")]="wP";b[sq("c5")]="wP";b[sq("e5")]="wP"}}
+  drawBoard(document.getElementById("learnBoard"),{pieces:b,sel:at,dots:pseudo(b,at),onTap:i=>{
+    if(b[i]&&b[i][0]==="w"&&b[i][1]===learnPiece)return;
+    const d=pseudo(b,at);if(!d.includes(i))return;
+    LG.click();const nb=Array(64).fill(null);nb[i]=b[at];
+    drawBoard(document.getElementById("learnBoard"),{pieces:nb,sel:i,dots:pseudo(nb,i),onTap:()=>showPiece()});
+  }});
+  const extra=learnPiece==="N"?" See how it jumps right over the white pawns around it?":learnPiece==="P"?" It can capture the black pawn or the knight, but it can't capture straight ahead.":" The black pawn on f6 is a target it can capture.";
+  document.getElementById("pieceCard").innerHTML=`<h3>${pcHTML("w"+learnPiece)} The ${NAME[learnPiece]}</h3>
+    <p><span class="value">${P.val}</span></p><p><b>How it moves:</b> ${P.moves}${extra}</p><p><b>Superpower:</b> ${P.power}</p><p class="tip"><b>Coach says:</b> ${P.tip}</p>
+    <p class="muted">Tap a dot to move it there, then tap again to reset.</p>`;
+}
+document.getElementById("setupBtn").onclick=()=>{
+  LG.click();
+  const b=parse("wR:a1,h1 wN:b1,g1 wB:c1,f1 wQ:d1 wK:e1 wP:a2,b2,c2,d2,e2,f2,g2,h2 bR:a8,h8 bN:b8,g8 bB:c8,f8 bQ:d8 bK:e8 bP:a7,b7,c7,d7,e7,f7,g7,h7");
+  drawBoard(document.getElementById("learnBoard"),{pieces:b,last:[sq("h1"),sq("d1")],onTap:()=>{}});
+  document.querySelectorAll("#pieceBtns button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  document.getElementById("pieceCard").innerHTML=`<h3>Setting up the board</h3>
+    <p class="rhyme">"Light on the right!"</p><p>Turn the board so the bottom-right corner square (h1) is light.</p>
+    <p class="rhyme">"Queen on her color!"</p><p>The white queen starts on the light square d1; the black queen on the dark square d8.</p>
+    <p>Rooks go in the corners, then knights, then bishops. Pawns fill the second row. White always moves first.</p>
+    <p class="muted">Tap any piece button to go back to the lessons.</p>`;
+};
+
+/* ---------- 2. Star hunt ---------- */
+const HUNTS=[
+  {t:"Rook Road",p:"wR",at:"a1",stars:["a6","f6","f2"],rocks:["c6","d1"],txt:"The rook travels in straight lines. Plan a route that turns at the right corners."},
+  {t:"Diagonal Dash",p:"wB",at:"c1",stars:["e3","g5","d8","a5"],rocks:["f4"],txt:"Bishops zoom diagonally. Notice every star is on a dark square, just like your bishop. A dark-square bishop can never reach a light square!"},
+  {t:"Horse Hops",p:"wN",at:"b1",stars:["c3","e4","g5","f7"],rocks:["b2","c2","a3","d2"],txt:"The knight hops in an L: two squares, then one sideways. It jumps right over the rocks."},
+  {t:"Royal Walk",p:"wK",at:"e1",stars:["e3","g4","f6"],rocks:["e2","f5"],txt:"The king takes one step at a time in any direction, including diagonally. Diagonal steps save time!"},
+  {t:"Queen's Sweep",p:"wQ",at:"d1",stars:["a4","h4","d8","g7","b6"],rocks:["d5","f3","c4"],txt:"The queen moves like a rook and a bishop together. Find the shortest path."},
+  {t:"Pawn Patrol",p:"wP",at:"e2",enemy:["f4","g6"],txt:"Capture both black pawns. Remember: pawns move straight forward but capture diagonally. You can't capture the pawn right in front of you."},
+  {t:"Knight Tour",p:"wN",at:"a1",stars:["d4","h8"],rocks:[],txt:"Get the knight across the whole board. Stay near the middle; the edges slow you down."}
+];
+function huntBoard(L,collected,pos,ptype){
+  const b=Array(64).fill(null);(L.rocks||[]).forEach(n=>b[sq(n)]="X");
+  (L.enemy||[]).forEach((n,k)=>{if(!(collected>>k&1))b[sq(n)]="bP"});b[pos]=ptype;return b;
+}
+function targets(L){return (L.stars||L.enemy).map(sq)}
+function huntPar(L){
+  const T=targets(L),full=(1<<T.length)-1,start=[sq(L.at),0,L.p];
+  const seen=new Set([start.join()]);let q=[start],d=0;
+  while(q.length){const nq=[];for(const [pos,m,pt] of q){if(m===full)return d;
+    const b=huntBoard(L,m,pos,pt);for(const t of pseudo(b,pos)){let nm2=m;const k=T.indexOf(t);if(k>=0)nm2|=1<<k;
+      const np=(pt==="wP"&&t<8)?"wQ":pt;const key=[t,nm2,np].join();if(!seen.has(key)){seen.add(key);nq.push([t,nm2,np])}}}
+    q=nq;d++}
+  return 99;
+}
+HUNTS.forEach(L=>L.par=huntPar(L));
+let hunt={lv:0},huntStars=LG.store.get("chess-hunt",{});
+function huntStart(lv){
+  hunt={lv,pos:sq(HUNTS[lv].at),pt:HUNTS[lv].p,got:0,moves:0,sel:true,done:false};
+  document.getElementById("huntStatus").textContent="";document.getElementById("huntStatus").className="status";
+  renderHunt();
+}
+function renderHunt(){
+  const L=HUNTS[hunt.lv],T=targets(L),b=huntBoard(L,hunt.got,hunt.pos,hunt.pt);
+  const stars=new Set(L.stars?T.filter((t,k)=>!(hunt.got>>k&1)):[]);
+  drawBoard(document.getElementById("huntBoard"),{pieces:b,stars,sel:hunt.done?null:hunt.pos,dots:hunt.done?[]:pseudo(b,hunt.pos),onTap:i=>{
+    if(hunt.done)return;const moves=pseudo(b,hunt.pos);
+    if(!moves.includes(i)){if(i!==hunt.pos){LG.tone(260,.06);document.getElementById("huntStatus").textContent=`The ${NAME[hunt.pt[1]].toLowerCase()} can't move there. Tap a dot.`;document.getElementById("huntStatus").className="status oops"}return}
+    hunt.moves++;hunt.pos=i;const k=T.indexOf(i);
+    if(k>=0&&!(hunt.got>>k&1)){hunt.got|=1<<k;LG.happy()}else LG.click();
+    if(hunt.pt==="wP"&&i<8){hunt.pt="wQ";LG.banner("Promotion!","Your pawn became a queen")}
+    document.getElementById("huntStatus").textContent="";
+    if(hunt.got===(1<<T.length)-1){
+      hunt.done=true;const s=hunt.moves<=L.par?3:hunt.moves<=L.par+2?2:1;
+      huntStars[hunt.lv]=Math.max(huntStars[hunt.lv]||0,s);LG.store.set("chess-hunt",huntStars);
+      const st=document.getElementById("huntStatus");st.className="status good";
+      st.textContent=s===3?`Perfect! ${hunt.moves} moves, same as the coach. ★★★`:`Done in ${hunt.moves} moves! ${"★".repeat(s)}${"☆".repeat(3-s)} Can you do it in ${L.par}?`;
+      if(s===3){LG.fanfare();LG.confetti(30)}
+      levelButtons();
+    }
+    renderHunt();
+  }});
+  document.getElementById("huntTitle").textContent=`Level ${hunt.lv+1}: ${L.t}`;
+  document.getElementById("huntText").textContent=L.txt;
+  document.getElementById("huntMoves").textContent=hunt.moves;
+  document.getElementById("huntPar").textContent=L.par;
+  document.getElementById("huntNext").disabled=hunt.lv>=HUNTS.length-1;
+}
+function levelButtons(){
+  document.getElementById("levelBtns").innerHTML=HUNTS.map((L,i)=>`<button type="button" data-i="${i}" aria-pressed="${i===hunt.lv}">${pcHTML(L.p)} ${i+1}<small>${"★".repeat(huntStars[i]||0)||"&nbsp;"}</small></button>`).join("");
+  document.querySelectorAll("#levelBtns button").forEach(b=>b.onclick=()=>{LG.click();huntStart(+b.dataset.i);levelButtons()});
+  document.getElementById("starCount").textContent=Object.values(huntStars).reduce((a,b)=>a+b,0);
+}
+document.getElementById("huntReset").onclick=()=>{LG.click();huntStart(hunt.lv)};
+document.getElementById("huntNext").onclick=()=>{LG.click();huntStart(Math.min(hunt.lv+1,HUNTS.length-1));levelButtons()};
+
+/* ---------- 3. Checkmate in 1 ---------- */
+const PUZ=[
+  {t:"Back-rank mate",pos:"wK:g1 wR:a1 bK:g8 bP:f7,g7,h7",hint:"a1",txt:"Black's own pawns trap their king on the back row. Which piece can attack along that row?",win:"The king's own pawns are like a wall he can't climb. Always give your king an escape square (called 'luft')!"},
+  {t:"Rook and king team-up",pos:"wK:b6 wR:h1 bK:a8",hint:"h1",txt:"Your king is guarding two escape squares. The rook just needs to finish the job.",win:"King + rook vs. king is a must-know checkmate. Push the enemy king to the edge, then the rook delivers."},
+  {t:"The ladder",pos:"wK:a1 wR:b7,h1 bK:e8",hint:"h1",txt:"One rook already blocks the 7th row. Use the other rook like a ladder rung.",win:"Two rooks take turns pushing the king back, like climbing a ladder."},
+  {t:"Queen kiss",pos:"wK:g6 wQ:a7 bK:h8",hint:"a7",txt:"Your king guards the squares around Black's king. There are FOUR different checkmates here. How many can you find? (Use Reset to try again.)",win:"Queen and king work as a team. Queen to g7, right next to the enemy king and protected by your king, is called the 'kiss of death.' Queen to h7, a8 and b8 all work too!"},
+  {t:"Arabian mate",pos:"wK:a1 wR:b7 wN:f6 bK:h8",hint:"b7",txt:"The knight on f6 guards two key squares. The rook just needs to arrive.",win:"This rook-and-knight pattern is over 1,000 years old! It's called the Arabian mate."},
+  {t:"Smothered mate",pos:"wK:g1 wN:g5 bK:h8 bR:g8 bP:g7,h7",hint:"g5",txt:"The black king is surrounded by his own pieces. Which piece can jump in?",win:"Only a knight can do this! The king is 'smothered' by his own army."},
+  {t:"Scholar's mate",pos:"wK:e1 wQ:h5 wB:c4 wR:a1,h1 wN:b1,g1 wB:c1 wP:a2,b2,c2,d2,e4,f2,g2,h2 bK:e8 bQ:d8 bR:a8,h8 bB:c8,f8 bN:c6,f6 bP:a7,b7,c7,d7,e5,f7,g7,h7",hint:"h5",txt:"This happens in real games after just 4 moves! Look at the weakest square near Black's king, f7. Who attacks it twice?",win:"The f7 square is only guarded by the king at the start. Now you know the trick, so it'll never happen to you: defend f7!"}
+];
+let puz={i:0},solved=LG.store.get("chess-mates",{});
+function puzStart(i){
+  puz={i,b:parse(PUZ[i].pos),sel:null,last:null,done:false,hint:null};
+  document.getElementById("puzStatus").textContent="";document.getElementById("puzStatus").className="status";
+  renderPuz();puzButtons();
+}
+function renderPuz(){
+  const P=PUZ[puz.i];
+  drawBoard(document.getElementById("mateBoard"),{pieces:puz.b,sel:puz.sel,dots:puz.sel!=null?legal(puz.b,puz.sel):[],last:puz.last,hint:puz.hint,
+    mate:puz.done?puz.b.indexOf("bK"):null,onTap:puzTap});
+  document.getElementById("puzTitle").textContent=`Puzzle ${puz.i+1}: ${P.t}`;
+  document.getElementById("puzText").textContent=P.txt;
+  document.getElementById("puzNext").disabled=puz.i>=PUZ.length-1;
+}
+function puzTap(i){
+  if(puz.done)return;
+  const st=document.getElementById("puzStatus"),p=puz.b[i];
+  if(p&&p[0]==="w"){puz.sel=puz.sel===i?null:i;LG.click();renderPuz();return}
+  if(puz.sel==null||!legal(puz.b,puz.sel).includes(i)){if(puz.sel!=null){LG.tone(260,.06);st.textContent="That piece can't go there.";st.className="status oops"}return}
+  const from=puz.sel,nb=doMove(puz.b,from,i);
+  if(isMate(nb,"b")){
+    puz.b=nb;puz.last=[from,i];puz.sel=null;puz.done=true;puz.hint=null;
+    solved[puz.i]=1;LG.store.set("chess-mates",solved);
+    st.className="status good";st.innerHTML=`Checkmate! ${PUZ[puz.i].win}`;
+    LG.fanfare();LG.confetti(40);LG.banner("Checkmate!",NAME[nb[i][1]]+" to "+nm(i));
+    renderPuz();puzButtons();return;
+  }
+  // explain why it failed
+  let why;
+  if(!inCheck(nb,"b"))why="That's not even check. The black king isn't attacked.";
+  else{
+    let esc=null;const k=nb.indexOf("bK");
+    for(const t of legal(nb,k)){esc=t;break}
+    if(esc!=null)why=`Check! But the king escapes to ${nm(esc)}.`;
+    else why="Check! But Black can block or capture the attacker.";
+  }
+  st.className="status oops";st.textContent=why+" Tap Reset and try again.";LG.sad();
+  puz.b=nb;puz.last=[from,i];puz.sel=null;renderPuz();puz.done=true;
+}
+function puzButtons(){
+  document.getElementById("puzBtns").innerHTML=PUZ.map((P,i)=>`<button type="button" data-i="${i}" aria-pressed="${i===puz.i}">#${i+1}<small>${solved[i]?"✓ solved":"&nbsp;"}</small></button>`).join("");
+  document.querySelectorAll("#puzBtns button").forEach(b=>b.onclick=()=>{LG.click();puzStart(+b.dataset.i)});
+  document.getElementById("mateCount").textContent=Object.keys(solved).length;
+}
+document.getElementById("puzReset").onclick=()=>{LG.click();puzStart(puz.i)};
+document.getElementById("puzNext").onclick=()=>{LG.click();puzStart(Math.min(puz.i+1,PUZ.length-1))};
+document.getElementById("puzHint").onclick=()=>{
+  if(puz.done)puzStart(puz.i);
+  puz.hint=sq(PUZ[puz.i].hint);LG.click();
+  document.getElementById("puzStatus").className="status";
+  document.getElementById("puzStatus").textContent=`Hint: use the ${NAME[puz.b[puz.hint][1]].toLowerCase()} on the green square.`;renderPuz();
+};
+
+/* ---------- 5. Quiz ---------- */
+const mini=(pos,hl)=>{const b=parse(pos);let s=`<svg viewBox="0 0 8 8">`;for(let i=0;i<64;i++){const r=Math.floor(i/8),c=i%8;s+=`<rect x="${c}" y="${r}" width="1" height="1" fill="${(r+c)%2?"#b58863":"#f0d9b5"}"/>`;
+  if(hl&&hl.includes(nm(i)))s+=`<rect x="${c+.05}" y="${r+.05}" width=".9" height=".9" fill="none" stroke="#2f9e5b" stroke-width=".1"/>`;
+  if(b[i])s+=`<text x="${c+.5}" y="${r+.8}" font-size=".85" text-anchor="middle" fill="${b[i][0]==="w"?"#fff":"#1d1a18"}" stroke="${b[i][0]==="w"?"#000":"none"}" stroke-width=".03">${GLYPH[b[i][1]]}︎</text>`}return s+"</svg>"};
+const QUIZ=[
+  {q:"How many points is a rook worth?",c:["5","3","9","1"],why:"Rook = 5. Knight and bishop = 3, queen = 9, pawn = 1."},
+  {q:"Which piece can jump over other pieces?",c:["Knight","Bishop","Queen","King"],why:"Only the knight can jump. Everyone else is blocked by pieces in the way."},
+  {q:"Which way does a pawn capture?",c:["Diagonally forward, one square","Straight forward","Any direction","Sideways"],why:"Pawns move straight but capture diagonally forward."},
+  {q:"What happens when a pawn reaches the last row?",c:["It promotes, usually to a queen","It goes back to the start","It's removed","Nothing"],why:"That's promotion! You can choose queen, rook, bishop or knight."},
+  {q:"The king is in check and has NO way out. What is that?",c:["Checkmate: you win","Stalemate: a draw","Just check","Castling"],why:"No way out of check = checkmate."},
+  {q:"A player has no legal moves but is NOT in check. What is that?",c:["Stalemate: a draw","Checkmate","They lose a turn","They win"],why:"Stalemate is a draw. Be careful when you're winning!"},
+  {q:"When setting up, the bottom-right square should be…",c:["Light (\"light on the right\")","Dark","Either one","Where the king goes"],why:"Light on the right!"},
+  {q:"Where does the white queen start?",c:["d1, on a light square (\"queen on her color\")","e1","On a dark square","Next to the rook"],why:"Queen on her color: the white queen on the light d1 square."},
+  {q:"What does CCT stand for?",c:["Checks, Captures, Threats","Castle, Center, Trade","Count, Check, Take","Capture, Castle, Think"],why:"Look for checks, captures and threats before every move."},
+  {q:"What should you do early in the game?",c:["Castle to keep your king safe","Move the queen out first","Move only rook pawns","Keep the knights home"],why:"Castling early tucks the king away and brings a rook toward the center."},
+  {q:"What is a fork?",c:["One piece attacking two pieces at once","A piece that can't move","Trading queens","Moving two pieces at once"],why:"Knights are famous for forks."},
+  {q:"In chess notation, what does Nf3 mean?",c:["Knight moves to f3","King moves to f3","A pawn captures on f3","Queen to f3"],why:"N = knight (K is used for the king)."},
+  {q:"White to move. What's the checkmate?",pic:mini("wK:g1 wR:a1 bK:g8 bP:f7,g7,h7"),c:["Rook to a8","Rook to a7","King to f2","Rook to e1"],why:"Ra8 is a back-rank mate: the pawns trap their own king."},
+  {q:"You touched your knight but want to move your bishop. In a tournament…",c:["You must move the knight (touch-move)","You can change your mind","You lose the game","You skip your turn"],why:"Touch-move: if you touch a piece, you have to move it (if it has a legal move)."}
+];
+LG.quiz(document.getElementById("quizBox"),QUIZ,{key:"chess-quiz",count:10});
+
+LG.tabs("chess");
+showPiece();huntStart(0);levelButtons();puzStart(0);
+</script>
+</body>
+</html>

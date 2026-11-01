@@ -1,21 +1,27 @@
-# Nigiri Builder
+# Lennox Game Space
 
-A sushi restaurant game for kids, inspired by my son.
+Learning games built for my son. Each tab teaches a real game or sport the way a coach would, so he knows the rules, the words and the strategy before his first practice.
 
 **Play it:** https://catnolapumpkin.github.io/nigiri-builder
 
-Customers sit along a conveyor belt and order nigiri. You build each piece on the cutting board, one layer at a time:
-
-1. **Rice** (shari)
-2. **Topping:** salmon (sake), tuna (maguro), shrimp (ebi), eel (unagi), egg (tamago) or avocado
-3. **Finishing touch:** seaweed belt (nori), sesame seeds (goma), a wasabi dot, or plain
-
-Serve the right plate and it rides down the belt to the customer. Each hour of the shift has a goal, like "make 3 tuna nigiri." Meet it and the clock moves to the next hour. There's no timer, so younger players can go at their own pace.
+| Tab | What it teaches |
+|---|---|
+| **Nigiri Builder** | A sushi restaurant game: build nigiri layer by layer and send it down the conveyor belt. |
+| **Chess** | Meet the pieces (tap to see every move), star-hunt mini-games for each piece, 7 checkmate-in-1 puzzles checked by a real rules engine, coach's rules (CCT, opening principles, notation) and a quiz. |
+| **Fencing** | Dress a fencer in the right order, the three weapons and their target areas, the piste, French terms with audio, a bout simulator with distance, parries, right of way and scoring lights, and a quiz. |
+| **Tennis** | Tap-to-learn court, a scoring trainer with umpire calls (deuce, advantage, tiebreaks), strokes, grips and footwork, racquet and ball guide, a tactics match simulator and a quiz. |
+| **Flag Football** | The field and no-run zones, official NFL FLAG rules, positions, an animated route tree, a quarterback simulator (read man vs. zone, beat the 7-second clock and the rusher) and a quiz. |
 
 ## About
 
-I first built Nigiri Builder as my final project for Stanford's Code in Place. This version rebuilds it as a single web page (HTML, CSS and JavaScript, no install needed) so it can be played on any phone, tablet or computer.
+I first built Nigiri Builder as my final project for Stanford's Code in Place. Lennox Game Space grows it into a set of academies. Everything is plain HTML, CSS and JavaScript with no install, so it plays on any phone, tablet or computer. Progress (stars, puzzles solved, bouts won) is saved in the browser.
+
+## Files
+
+- `index.html`: the Lennox Game Space hub with a tab for each game
+- `nigiri.html`, `chess.html`, `fencing.html`, `tennis.html`, `football.html`: one page per game
+- `shared.css`, `shared.js`: shared look, quizzes, flashcards and sounds
 
 ## Run it locally
 
-Download `index.html` and open it in any web browser.
+Download the folder and open `index.html` in any web browser.

@@ -1,0 +1,98 @@
+/* Shared look for the Lennox Game Space academies. Each page sets its own theme tokens:
+   --bg --fg --panel --panel-2 --card --card-ink --accent --on-accent --muted */
+:root{
+  --display:"Mochiy Pop One","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --good:#2f9e5b; --oops:#d1495b; --gold:#f2b134;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.4;
+  padding:16px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:16px;min-width:0}
+.game-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(26px,6.5vw,40px);margin:0;line-height:1.1;text-wrap:balance}
+h1 small{display:block;font-family:var(--body);font-size:14px;letter-spacing:2px;text-transform:uppercase;opacity:.75;margin-top:6px}
+h2{font-family:var(--display);font-weight:400;font-size:clamp(20px,4.6vw,26px);margin:0 0 6px;line-height:1.2}
+h3{margin:0 0 4px;font-size:19px}
+p{margin:0 0 8px}
+.lead{font-size:18px;opacity:.92;max-width:62ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--panel);border:2px solid rgba(255,255,255,.14);border-radius:999px;padding:6px 14px;font-weight:600;
+  font-variant-numeric:tabular-nums;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.chip b{color:var(--gold);font-size:19px}
+
+button{font-family:var(--body);font-size:17px;font-weight:600;cursor:pointer;border:none;border-radius:14px;padding:11px 16px;
+  color:var(--card-ink);background:var(--card);box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .08s,box-shadow .08s;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+button:disabled{opacity:.42;cursor:not-allowed}
+button.primary{background:var(--accent);color:var(--on-accent)}
+button.big{font-family:var(--display);font-weight:400;font-size:20px;padding:13px 22px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+/* in-page lesson tabs */
+nav.sub{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin;margin:0 -2px}
+nav.sub button{white-space:nowrap;background:var(--panel);color:var(--fg);box-shadow:none;border:2px solid rgba(255,255,255,.12);padding:9px 14px;font-size:16px;flex:none}
+nav.sub button[aria-selected="true"]{background:var(--accent);color:var(--on-accent);border-color:transparent}
+[data-panel]{display:grid;gap:14px;min-width:0}
+[data-panel][hidden]{display:none!important}
+
+.panel{background:var(--panel);border-radius:16px;padding:16px;min-width:0}
+.panel-2{background:var(--panel-2);border-radius:14px;padding:14px;min-width:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}
+.card{background:var(--card);color:var(--card-ink);border-radius:14px;padding:14px;min-width:0;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.card h3{font-family:var(--display);font-weight:400;font-size:20px}
+.card .muted,.muted{color:var(--muted)}
+.card ul,.panel ul{margin:6px 0 0;padding-left:20px}
+.card li,.panel li{margin:3px 0}
+.tag{display:inline-block;font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--accent);color:var(--on-accent)}
+.tip{border-left:5px solid var(--gold);background:rgba(242,177,52,.14);padding:10px 12px;border-radius:0 10px 10px 0}
+.say{font-style:italic;color:var(--muted);font-size:15px}
+.svgbox svg{width:100%;height:auto;display:block}
+
+/* tappable diagram labels */
+.hotspot{cursor:pointer}
+.hotspot:focus{outline:none}
+.hotspot:focus-visible .hs-ring,.hotspot:hover .hs-ring{stroke:var(--gold);stroke-width:4}
+.info{min-height:72px}
+
+/* quiz */
+.quiz{display:grid;gap:12px}
+.qbar{display:flex;justify-content:space-between;font-weight:600;opacity:.85;font-variant-numeric:tabular-nums}
+.qprog{height:8px;background:rgba(255,255,255,.15);border-radius:99px;overflow:hidden}
+.qprog i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.qq{font-size:20px;font-weight:600;margin:0}
+.qpic{background:var(--card);border-radius:12px;padding:8px;max-width:420px}
+.qpic svg{width:100%;height:auto;display:block}
+.qchoices{display:grid;gap:8px}
+.qchoices button{text-align:left;font-weight:500;line-height:1.3}
+.qchoices button.right{background:var(--good);color:#fff;opacity:1}
+.qchoices button.wrong{background:var(--oops);color:#fff;opacity:1}
+.qwhy{background:var(--panel-2);border-radius:12px;padding:12px}
+.qend{text-align:center;display:grid;gap:10px;justify-items:center;padding:10px}
+.qend .big-num{font-family:var(--display);font-size:54px;color:var(--gold);line-height:1}
+
+/* flashcards */
+.flash{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:10px}
+.fc{position:relative;min-height:150px;perspective:900px}
+.fc-inner{position:absolute;inset:0;transition:transform .45s;transform-style:preserve-3d}
+.fc.flipped .fc-inner{transform:rotateY(180deg)}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:12px;display:grid;align-content:center;gap:4px;
+  background:var(--card);color:var(--card-ink);box-shadow:0 4px 0 rgba(0,0,0,.18);text-align:center;cursor:pointer}
+.fc-back{transform:rotateY(180deg);background:var(--accent);color:var(--on-accent);font-size:15px;text-align:left}
+.fc-term{font-family:var(--display);font-size:21px;line-height:1.15}
+.fc-face .speak{position:absolute;top:6px;right:6px;padding:4px 8px;font-size:15px;box-shadow:none;background:rgba(0,0,0,.08);color:inherit}
+@media (prefers-reduced-motion:reduce){.fc-inner{transition:none}}
+
+/* feedback */
+.banner{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);opacity:0;background:var(--gold);color:#1b1f2a;font-family:var(--display);
+  font-size:clamp(22px,5vw,32px);padding:18px 26px;border-radius:18px;box-shadow:0 8px 0 rgba(0,0,0,.25);z-index:20;text-align:center;pointer-events:none;
+  transition:all .35s cubic-bezier(.3,1.6,.5,1);max-width:90vw}
+.banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.banner small{display:block;font-family:var(--body);font-size:17px;font-weight:600;margin-top:6px}
+.confetti{position:fixed;pointer-events:none;top:-10px;width:10px;height:14px;border-radius:2px;animation:lg-fall 1.4s ease-in forwards;z-index:19}
+@keyframes lg-fall{to{transform:translateY(105vh) rotate(540deg)}}
+footer{opacity:.6;font-size:14px;text-align:center}
