@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Soccer Academy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Fredoka:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Soccer Academy: floodlit night match, navy stands, orange captain's armband. Single theme by choice. */
+:root{--bg:#10263f;--fg:#eef6ff;--panel:#183556;--panel-2:#21446b;--card:#f4f8fc;--card-ink:#0f2238;--accent:#ff8a3d;--on-accent:#2a1300;--muted:#4f6377;
+  --home:#e4572e;--away:#2f6fd6}
+.two{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:740px){.two{grid-template-columns:1fr}}
+.pitchbox{background:#2f7f3c;border-radius:14px;padding:6px;max-width:320px;width:100%;justify-self:center}
+.pitchbox svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.hotspot.on .hs-ring{stroke:var(--gold)!important;stroke-width:5!important}
+.lbl{font-family:Fredoka,sans-serif;font-weight:700;fill:#fff;text-anchor:middle;pointer-events:none}
+.clockbar{height:12px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden}
+.clockbar i{display:block;height:100%;background:var(--accent);width:100%}
+.clockbar.late i{background:#ff5d6c}
+.msg{background:var(--card);color:var(--card-ink);border-radius:12px;padding:10px 12px;min-height:52px}
+.msg b.big{font-family:var(--display);font-weight:400;font-size:20px;display:block}
+.legend{font-size:13px;opacity:.85;display:flex;gap:12px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acts button small{display:block;font-weight:400;font-size:12px;opacity:.8}
+button.scan{background:#ffd35a;color:#2b2000;font-family:var(--display);font-weight:400;font-size:24px;animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{to{transform:scale(1.05)}}
+@media (prefers-reduced-motion:reduce){button.scan{animation:none}}
+.move{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:start}
+.move svg{width:64px;height:64px}
+.plan li b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="game-head">
+    <h1>Soccer Academy<small>See it. Scan it. Play it.</small></h1>
+    <div class="chips"><div class="chip">Goals <b id="goalCount">0</b></div><div class="chip">Best rondo <b id="rondoBest">0</b></div></div>
+  </header>
+
+  <nav class="sub" aria-label="Soccer lessons">
+    <button data-tab="field">1 · The field</button>
+    <button data-tab="rules">2 · Rules</button>
+    <button data-tab="positions">3 · Positions</button>
+    <button data-tab="skills">4 · Skills &amp; words</button>
+    <button data-tab="train">5 · Train like a pro</button>
+    <button data-tab="match">6 · Play the match!</button>
+    <button data-tab="quiz">7 · Quiz</button>
+  </nav>
+
+  <!-- 1. Field -->
+  <section data-panel="field">
+    <p class="lead">At your age (U11 and U12) soccer is played <b>9 v 9</b>: 8 field players and a goalkeeper on each team, on a field about <b>70–80 yards long</b> and <b>45–55 yards wide</b>, with a <b>size 4</b> ball. Tap the lines and areas.</p>
+    <div class="two">
+      <div class="pitchbox" id="fieldBox"></div>
+      <div class="card info" id="fieldInfo" aria-live="polite"><h3>Tap a part of the field</h3><p>Every line on a soccer field has a job.</p></div>
+    </div>
+  </section>
+
+  <!-- 2. Rules -->
+  <section data-panel="rules">
+    <p class="lead">Soccer's rules are called the <b>Laws of the Game</b>. There are 17 of them, written by a group called the IFAB. Youth leagues change a few to fit kids. Here are the big ones.</p>
+    <div class="cards">
+      <div class="card"><h3>The goal</h3><p>Get the ball all the way over the other team's goal line, between the posts and under the crossbar. Most goals wins. A 9v9 youth game is usually <b>two 30-minute halves</b>.</p></div>
+      <div class="card"><h3>No hands!</h3><p>Field players can use feet, legs, chest and head, but <b>not hands or arms</b>. Touching it on purpose with your hand or arm is a <b>handball</b>. Only the goalkeeper can use hands, and only inside their own penalty area.</p></div>
+      <div class="card"><h3>Ball out of play</h3><ul><li><b>Over the sideline:</b> throw-in for the team that didn't touch it last. Both hands, ball from behind your head, both feet on the ground.</li><li><b>Over the goal line, last touched by attackers:</b> goal kick.</li><li><b>Over the goal line, last touched by defenders:</b> corner kick.</li></ul></div>
+      <div class="card"><h3>Fouls &amp; free kicks</h3><p>Tripping, pushing, kicking or holding an opponent is a foul. The other team gets a <b>free kick</b>, and opponents must back up. A foul by defenders inside their own penalty area gives a <b>penalty kick</b>: one shooter against the keeper.</p></div>
+      <div class="card"><h3>Yellow &amp; red cards</h3><p>A <b>yellow card</b> is a warning for bad behavior or a reckless foul. Two yellows, or one really serious foul, means a <b>red card</b>: you have to leave the game and your team plays one short.</p></div>
+      <div class="card"><h3>Offside (the tricky one)</h3><p>When a teammate passes to you, you're <b>offside</b> if you were closer to the other goal than both the ball <b>and</b> the second-to-last defender (the keeper usually counts as one). It only counts in the other team's half, and never from a throw-in, goal kick or corner. 9v9 games use offside.</p></div>
+      <div class="card"><h3>Heading</h3><p>To protect young brains, U.S. Soccer says <b>no heading at all for 11 and under</b>, in games or practice. At U12, heading practice is limited. If the ball is in the air, use your chest or let it bounce.</p></div>
+      <div class="card"><h3><span class="tag">New for 2026</span> Hurry up!</h3><ul><li>If a team takes too long on a <b>throw-in or goal kick</b>, the referee can start a <b>5-second countdown</b>. Too slow? Throw-in goes to the other team; goal kick becomes a <b>corner for the other team</b>.</li><li>Goalkeepers can only hold the ball about <b>8 seconds</b>, or the other team gets a corner.</li><li>A player getting help for an injury on the field must stay off for 1 minute.</li></ul><p class="muted">These are the newest pro rules. Your league may not use all of them yet.</p></div>
+      <div class="card"><h3>Good sports</h3><ul><li>Shin guards every time, socks pulled over them</li><li>Everyone plays goalkeeper sometimes until U11</li><li>Help a player up after a fall</li><li>Shake hands with the other team and thank the ref</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 3. Positions -->
+  <section data-panel="positions">
+    <p class="lead">A popular 9v9 shape is the <b>1-3-2-3</b>: 1 goalkeeper, 3 defenders, 2 midfielders, 3 forwards. You're red, attacking up the screen. Tap a player.</p>
+    <div class="two">
+      <div class="pitchbox" id="formBox"></div>
+      <div style="display:grid;gap:12px">
+        <div class="card info" id="formInfo" aria-live="polite"><h3>Tap a player</h3><p>Coaches say "everyone attacks, everyone defends."</p></div>
+        <div class="card"><h3>Shape = triangles</h3><p>Look at the dots: players stand in <b>triangles</b>, never in a straight line. A triangle gives the ball carrier two passing options at once.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Skills -->
+  <section data-panel="skills">
+    <div class="cards">
+      <div class="card"><h3>First touch</h3><p>Your first touch should push the ball <b>away from pressure</b> and into space, not stop it dead at your feet. Cushion it with the inside of your foot, like catching an egg.</p></div>
+      <div class="card"><h3>Passing</h3><ul><li>Plant foot next to the ball, toes pointing at your target</li><li>Strike with the <b>inside of the foot</b>, ankle locked</li><li>Follow through toward your teammate</li><li>Pass to the foot <b>away</b> from their defender</li></ul></div>
+      <div class="card"><h3>Dribbling</h3><p>Lots of <b>small touches</b> with both feet, ball close, head up between touches so you can see. Speed up after you beat a defender.</p></div>
+      <div class="card"><h3>Shooting</h3><ul><li>Strike with your <b>laces</b>, toe pointed down</li><li>Body over the ball keeps it low</li><li>Aim for the <b>low corners</b>: hardest for keepers</li><li>Placement beats power</li></ul></div>
+      <div class="card"><h3>Defending</h3><ul><li>Stay <b>goal-side</b>: between your player and your goal</li><li>Low, bent knees, body sideways</li><li>Don't dive in. Be patient, then poke the ball when it's loose</li><li>Push them toward the sideline</li></ul></div>
+      <div class="card"><h3>Goalkeeping</h3><ul><li>Ready stance: on your toes, hands up</li><li>Make a "W" with your hands for high balls</li><li>Get your body behind the ball</li><li>After a save, start the attack fast</li></ul></div>
+    </div>
+    <div class="panel"><h2>Moves to learn</h2>
+      <div class="cards" id="moves"></div>
+    </div>
+    <div class="panel"><h2>Talk like a player</h2><p class="muted" style="color:var(--fg);opacity:.8">Tap a card to flip it. 🔊 reads it out loud.</p><div id="flash"></div></div>
+  </section>
+
+  <!-- 5. Train -->
+  <section data-panel="train">
+    <p class="lead">Pro academies don't make kids stand in lines anymore. The newest coaching is all about <b>playing game-like situations</b> and <b>making decisions</b>. Here's how the pros train, and a game to try it.</p>
+    <div class="cards">
+      <div class="card"><span class="tag">U.S. Soccer</span><h3>Play-Practice-Play</h3><p>Practice starts with a small game, then a focused activity on one skill, then a big game at the end. Less standing around, more touches, and you figure out answers yourself.</p></div>
+      <div class="card"><span class="tag">More touches</span><h3>Small-sided games</h3><p>3v3, 4v4, 5v5. Fewer players means you touch the ball way more and make more decisions every minute.</p></div>
+      <div class="card"><span class="tag">Barcelona style</span><h3>Rondos</h3><p>Keep-away in a circle: passers on the outside, defenders in the middle. It trains quick passing, angles and thinking ahead. Try it below!</p></div>
+      <div class="card"><span class="tag">Pro secret</span><h3>Scanning</h3><p>The best players <b>look over their shoulder before the ball arrives</b>, so they already know where defenders and teammates are. Studies show scanning can be trained, and it helps decision-making.</p></div>
+      <div class="card"><span class="tag">Game brain</span><h3>Decisions over drills</h3><p>Sports scientists found kids learn better in <b>game-like practice</b> (with defenders and choices) than from repeating the same drill. That's why this academy has you play, not just read.</p></div>
+      <div class="card"><span class="tag">Talk</span><h3>Use your voice</h3><ul><li><b>"Man on!"</b> a defender is coming</li><li><b>"Time!"</b> no one's near, take a touch</li><li><b>"Turn!"</b> you have space to face forward</li><li><b>"Switch!"</b> pass to the other side</li></ul></div>
+    </div>
+    <div class="panel">
+      <h2>Rondo challenge: 5 v 2 keep-away</h2>
+      <p>Tap a teammate to pass. Defenders steal it if they touch the ball. <b>2 touches max</b>, so pass before the clock runs out. A pass <b>between</b> the two defenders is a <b>split pass</b>: worth 3!</p>
+      <div class="two" style="margin-top:10px">
+        <div class="pitchbox"><svg id="rondoSvg" viewBox="0 0 300 300" aria-label="Rondo circle"></svg></div>
+        <div style="display:grid;gap:10px;align-content:start">
+          <div class="row"><div class="chip">Points <b id="rScore">0</b></div><div class="chip">Passes <b id="rPasses">0</b></div></div>
+          <div class="clockbar" id="rClock"><i></i></div>
+          <div class="msg" id="rMsg" aria-live="polite"><b class="big">Ready?</b>Watch the defender in the middle. They'll try to block your easiest pass.</div>
+          <button type="button" class="primary big" id="rStart">Start rondo</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel plan"><h2>10-minute home ball mastery</h2><p>Do this in the yard or garage, 4 or 5 days a week. Both feet every time.</p>
+      <ul><li><b>1 min</b> Toe taps: tap the top of the ball, switching feet fast</li><li><b>1 min</b> Inside-inside: tap it side to side between your feet</li><li><b>1 min</b> Sole rolls: roll it across your body with the bottom of your foot</li><li><b>2 min</b> Wall passes: pass against a wall, control, pass again. Left foot too!</li><li><b>2 min</b> Cone dribble: weave through 5 cones (or shoes)</li><li><b>2 min</b> Moves: practice 1 move from the Skills tab, both directions</li><li><b>1 min</b> Juggling: count your record</li></ul>
+      <p class="tip">Warm up first. FIFA has a free warm-up for kids called <b>FIFA 11+ Kids</b> that helps prevent injuries.</p></div>
+  </section>
+
+  <!-- 6. Match -->
+  <section data-panel="match">
+    <p class="lead">You're the red team, attacking up the field. You have <b>8 attacks</b> to score as many goals as you can. Tap a teammate to pass. While the ball is rolling to them, hit <b>SCAN</b> to check your shoulder, or you won't see what's ahead!</p>
+    <div class="two">
+      <div style="display:grid;gap:8px">
+        <div class="pitchbox"><svg id="simSvg" viewBox="-6 -12 312 474" aria-label="Match field"></svg></div>
+        <div class="clockbar" id="clockbar" aria-hidden="true"><i id="clockfill"></i></div>
+        <div class="legend"><span><i style="background:#e4572e"></i>Your team</span><span><i style="background:#2f6fd6"></i>Defense</span><span><i style="background:#ffd35a"></i>Ball</span><span>Ring = how open</span><span>🚩 = offside</span></div>
+      </div>
+      <div style="display:grid;gap:12px;align-content:start">
+        <div class="row"><div class="chip">Attack <b id="atkChip">1</b>/8</div><div class="chip">Goals <b id="mGoals">0</b></div><div class="chip">Scans <b id="mScans">0</b></div></div>
+        <div class="msg" id="msg" aria-live="polite"></div>
+        <div id="controls" style="display:grid;gap:10px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Quiz -->
+  <section data-panel="quiz"><div class="panel" id="quizBox"></div></section>
+  <footer>Made with love for Lennox</footer>
+</div>
+
+<script src="shared.js"></script>
+<script>
+/* ---------- Pitch drawing: 9v9 field, 50 x 75 yards, 6 px per yard, attacking up ---------- */
+const S=6,FW=50,FL=75;
+function pitchSVG(){
+  let s=`<rect x="0" y="0" width="300" height="450" fill="#3d9a4a"/>`;
+  for(let i=0;i<10;i+=2)s+=`<rect x="0" y="${i*45}" width="300" height="45" fill="#37903f"/>`;
+  s+=`<g fill="none" stroke="#fff" stroke-width="2" opacity=".9">
+    <rect x="0" y="0" width="300" height="450"/>
+    <line x1="0" y1="225" x2="300" y2="225"/><circle cx="150" cy="225" r="48"/>
+    <rect x="54" y="0" width="192" height="84"/><rect x="102" y="0" width="96" height="30"/>
+    <rect x="54" y="366" width="192" height="84"/><rect x="102" y="420" width="96" height="30"/>
+    <path d="M108.4 84 A48 48 0 0 0 191.6 84"/><path d="M108.4 366 A48 48 0 0 1 191.6 366"/>
+    <path d="M6 0 A6 6 0 0 1 0 6"/><path d="M294 0 A6 6 0 0 0 300 6"/><path d="M0 444 A6 6 0 0 1 6 450"/><path d="M300 444 A6 6 0 0 0 294 450"/>
+  </g>
+  <g fill="#fff"><circle cx="150" cy="225" r="2.5"/><circle cx="150" cy="60" r="2.5"/><circle cx="150" cy="390" r="2.5"/></g>
+  <g fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="2.5"><rect x="129" y="-9" width="42" height="9"/><rect x="129" y="450" width="42" height="9"/></g>`;
+  return s;
+}
+const lbl=(x,y,t,size=10)=>`<text x="${x}" y="${y}" class="lbl" font-size="${size}">${t}</text>`;
+
+/* ---------- 1. Field lesson ---------- */
+(function(){
+  const box=document.getElementById("fieldBox");
+  box.innerHTML=`<svg viewBox="-6 -12 312 474" role="img" aria-label="9 v 9 soccer field">${pitchSVG()}
+    <g class="hotspot" data-k="touch"><line class="hs-ring" x1="0" y1="100" x2="0" y2="350" stroke="#fff" stroke-width="4"/><rect x="-6" y="100" width="16" height="250" fill="transparent"/><line x1="300" y1="100" x2="300" y2="350" stroke="#fff" stroke-width="4"/><rect x="290" y="100" width="16" height="250" fill="transparent"/></g>
+    <g class="hotspot" data-k="goalline"><line class="hs-ring" x1="190" y1="0" x2="300" y2="0" stroke="#fff" stroke-width="4"/><rect x="190" y="-6" width="110" height="12" fill="transparent"/></g>
+    <g class="hotspot" data-k="half"><line class="hs-ring" x1="0" y1="225" x2="92" y2="225" stroke="#fff" stroke-width="4"/><line x1="208" y1="225" x2="300" y2="225" stroke="#fff" stroke-width="4"/><rect x="0" y="217" width="95" height="16" fill="transparent"/><rect x="205" y="217" width="95" height="16" fill="transparent"/></g>
+    <g class="hotspot" data-k="circle"><circle class="hs-ring" cx="150" cy="225" r="48" fill="rgba(255,255,255,.04)" stroke="#fff" stroke-width="2"/></g>
+    <g class="hotspot" data-k="box"><rect class="hs-ring" x="54" y="366" width="192" height="84" fill="rgba(255,255,255,.08)" stroke="#fff" stroke-width="2"/></g>
+    <g class="hotspot" data-k="six"><rect class="hs-ring" x="102" y="420" width="96" height="30" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="2"/></g>
+    <g class="hotspot" data-k="spot"><circle class="hs-ring" cx="150" cy="390" r="8" fill="#fff" stroke="#fff" stroke-width="2"/></g>
+    <g class="hotspot" data-k="corner"><circle class="hs-ring" cx="300" cy="0" r="10" fill="#ffd35a" stroke="#fff" stroke-width="2"/><circle cx="0" cy="450" r="10" fill="#ffd35a"/></g>
+    <g class="hotspot" data-k="goal"><rect class="hs-ring" x="129" y="-10" width="42" height="12" fill="rgba(255,255,255,.4)" stroke="#fff" stroke-width="2"/></g>
+  </svg>`;
+  LG.hotspots(box,{
+    touch:{t:"Touchlines (sidelines)",d:"The two long lines. If the whole ball rolls over one, it's a throw-in. The ball is still in play while any part of it is on the line!"},
+    goalline:{t:"Goal lines (end lines)",d:"The short lines at each end. Ball over this line (not in the goal) means a goal kick or a corner kick, depending on who touched it last."},
+    half:{t:"Halfway line",d:"Splits the field into two halves. You can't be offside in your own half. Kickoffs start here."},
+    circle:{t:"Center circle & center mark",d:"Kickoffs happen on the center mark at the start of each half and after every goal. Opponents must stay outside the circle until the ball is kicked."},
+    box:{t:"Penalty area (the box)",d:"The big rectangle in front of each goal. The keeper can use hands in here. If a defender fouls in here, the attackers get a penalty kick!"},
+    six:{t:"Goal area (the six)",d:"The small box right in front of the goal. Goal kicks are taken from anywhere inside it."},
+    spot:{t:"Penalty mark",d:"In U9 to U12 games, the penalty spot is 10 yards from the goal. Penalty kicks are shot from here, one shooter against the keeper."},
+    corner:{t:"Corner arcs",d:"Little quarter circles in each corner. Corner kicks are taken from inside the arc. A corner flag stands here."},
+    goal:{t:"The goal",d:"About 18.5 to 21 feet wide and 6.5 to 7 feet tall for 9v9. The whole ball has to cross the line between the posts to count."}
+  },document.getElementById("fieldInfo"));
+})();
+
+/* ---------- 3. Positions ---------- */
+const HOME=[ // key, short, x, y in yards (y=0 is the goal you attack), name, job
+  ["GK","GK",25,71,"Goalkeeper","The only player who can use hands, inside the penalty area. Stops shots, organizes the defense with their voice, and starts attacks with throws and passes."],
+  ["LB","LB",9,58,"Left back","Defends the left side. When your team attacks, runs forward on the outside to help (that's an overlap)."],
+  ["CB","CB",25,61,"Center back","The heart of the defense. Stays goal-side, wins the ball and starts the build-up with calm passes."],
+  ["RB","RB",41,58,"Right back","Defends the right side and joins the attack down the wing."],
+  ["LM","CM",17,46,"Center mid (left)","The engine. Runs box to box, connects defense and attack, always shows for a pass. Scans a lot!"],
+  ["RM","CM",33,46,"Center mid (right)","Partners the other midfielder. One usually stays a little deeper to protect the defense."],
+  ["LW","LW",7,32,"Left wing","Stays wide to stretch the defense, beats defenders 1 v 1, crosses or cuts inside to shoot."],
+  ["ST","ST",25,29,"Striker (center forward)","Scores goals and holds the ball up for teammates. Times runs to stay onside. First defender when the other team has the ball."],
+  ["RW","RW",43,32,"Right wing","Stays wide on the right, dribbles at defenders and delivers crosses."]
+];
+(function(){
+  const box=document.getElementById("formBox");
+  let s=`<svg viewBox="-6 -12 312 474" role="img" aria-label="1-3-2-3 formation">${pitchSVG()}`;
+  const tri=[[1,4,2],[2,4,5],[3,5,2],[4,6,7],[5,8,7]];
+  tri.forEach(t=>s+=`<polygon points="${t.map(i=>HOME[i][2]*S+","+HOME[i][3]*S).join(" ")}" fill="rgba(255,211,90,.12)" stroke="#ffd35a" stroke-width="1.5" stroke-dasharray="4 4"/>`);
+  HOME.forEach((p,i)=>s+=`<g class="hotspot" data-k="${i}"><circle class="hs-ring" cx="${p[2]*S}" cy="${p[3]*S}" r="15" fill="${i?"#e4572e":"#f2b134"}" stroke="#fff" stroke-width="2.5"/>${lbl(p[2]*S,p[3]*S+4,p[1],11)}</g>`);
+  box.innerHTML=s+`</svg>`;
+  const info={};HOME.forEach((p,i)=>info[i]={t:p[4],d:p[5]});
+  LG.hotspots(box,info,document.getElementById("formInfo"));
+})();
+
+/* ---------- 4. Moves + flashcards ---------- */
+(function(){
+  const ball=(x,y)=>`<circle cx="${x}" cy="${y}" r="6" fill="#fff" stroke="#222" stroke-width="1.5"/>`;
+  const arrow=(d)=>`<path d="${d}" fill="none" stroke="#ff8a3d" stroke-width="3" stroke-linecap="round" marker-end="url(#ah)"/>`;
+  const defs=`<defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff8a3d"/></marker></defs>`;
+  const MV=[
+    ["Drag-back","Put the bottom of your foot on top of the ball and roll it backward, then turn away. Great when a defender blocks your path.",arrow("M32 14 L32 46")+ball(32,12)],
+    ["Cruyff turn","Fake a pass or shot, then use the inside of your foot to push the ball <b>behind your standing leg</b> and go the other way. Named after Dutch legend Johan Cruyff.",arrow("M20 20 Q36 40 44 20")+ball(20,18)],
+    ["Step-over","Swing your foot around the ball (without touching it) to fake going one way, then push it with the outside of your other foot.",arrow("M22 40 Q32 14 42 40")+ball(32,46)],
+    ["Inside cut","Dribble forward, then chop the ball sideways with the inside of your foot to make space for a shot or pass.",arrow("M20 52 L20 28 L46 22")+ball(20,52)],
+    ["La Croqueta","Shift the ball quickly from one foot to the other, side to side, to slip past a defender. A favorite of Andrés Iniesta.",arrow("M18 32 L46 32")+ball(18,32)],
+    ["Scissors","Step one foot around the front of the ball, fake that way, then take it the other way with the other foot.",arrow("M24 44 Q20 22 32 18")+arrow("M40 44 Q44 22 32 18")+ball(32,46)]
+  ];
+  document.getElementById("moves").innerHTML=MV.map(m=>`<div class="card move"><svg viewBox="0 0 64 64" aria-hidden="true">${defs}<rect width="64" height="64" rx="12" fill="#3d9a4a"/>${m[2]}</svg><div><h3>${m[0]}</h3><p>${m[1]}</p></div></div>`).join("");
+  LG.flashcards(document.getElementById("flash"),[
+    {term:"Nutmeg",mean:"Passing or dribbling the ball through a defender's legs."},
+    {term:"Through ball",mean:"A pass played into space behind the defense for a teammate to run onto."},
+    {term:"One-two",mean:"Pass to a teammate, sprint past your defender, and get it right back. Also called a wall pass."},
+    {term:"Overlap",mean:"A teammate runs around the outside of the ball carrier to give them a new passing option."},
+    {term:"Cross",mean:"A pass from near the sideline into the box, toward the goal."},
+    {term:"Assist",mean:"The pass that sets up a goal."},
+    {term:"Hat trick",mean:"One player scoring 3 goals in a game."},
+    {term:"Clean sheet",mean:"When a team (and its keeper) doesn't let in any goals."},
+    {term:"Set piece",mean:"A planned play from a free kick, corner kick or throw-in."},
+    {term:"Switch the play",mean:"Moving the ball quickly from one side of the field to the other, where there's more space."},
+    {term:"Press",mean:"Defending by chasing the ball right away to win it back fast, as a team."},
+    {term:"Counterattack",mean:"Attacking super fast right after winning the ball, before the other team can get back."},
+    {term:"Scanning",mean:"Quick looks over your shoulder before you get the ball, so you know what's around you."},
+    {term:"Rondo",say:"RON-doh",mean:"A keep-away game in a circle with passers outside and defenders inside."},
+    {term:"Fútbol",say:"FOOT-bol",mean:"What most of the world calls soccer! In England it's 'football.'",speakAs:"fútbol"},
+    {term:"Golazo",say:"go-LAH-so",mean:"Spanish for an amazing, beautiful goal.",speakAs:"golazo"}
+  ]);
+})();
+
+/* ---------- 5. Rondo ---------- */
+(function(){
+  const svg=document.getElementById("rondoSvg"),C=150,R=108;
+  const P=[0,1,2,3,4].map(i=>{const a=-Math.PI/2+i*2*Math.PI/5;return{x:C+R*Math.cos(a),y:C+R*Math.sin(a)}});
+  let D,ball,holder,flight,clock,score,passes,running=false,raf,last,best=LG.store.get("sc-rondo",0);
+  document.getElementById("rondoBest").textContent=best;
+  const msg=h=>document.getElementById("rMsg").innerHTML=h;
+  const segDist=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,L=dx*dx+dy*dy||1;let t=((p.x-a.x)*dx+(p.y-a.y)*dy)/L;t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)};
+  const cross=(a,b,c,d)=>{const o=(p,q,r)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);return o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0};
+  function draw(){
+    let s=`<rect width="300" height="300" fill="#3d9a4a"/><circle cx="${C}" cy="${C}" r="${R}" fill="rgba(255,255,255,.06)" stroke="#fff" stroke-width="2" stroke-dasharray="6 6"/>`;
+    if(running&&!flight)P.forEach((p,i)=>{if(i!==holder){const op=Math.min(...D.map(d=>segDist(d,P[holder],p)));s+=`<line x1="${P[holder].x}" y1="${P[holder].y}" x2="${p.x}" y2="${p.y}" stroke="${op>26?"#7dff9a":op>14?"#ffd35a":"#ff6b6b"}" stroke-width="2" opacity=".45" stroke-dasharray="5 5"/>`}});
+    P.forEach((p,i)=>s+=`<g data-p="${i}" style="cursor:pointer"><circle cx="${p.x}" cy="${p.y}" r="22" fill="transparent"/><circle cx="${p.x}" cy="${p.y}" r="15" fill="#e4572e" stroke="${i===holder?"#ffd35a":"#fff"}" stroke-width="${i===holder?4:2.5}"/>${lbl(p.x,p.y+4,i+1,12)}</g>`);
+    D.forEach(d=>s+=`<circle cx="${d.x}" cy="${d.y}" r="15" fill="#2f6fd6" stroke="#fff" stroke-width="2.5"/>${lbl(d.x,d.y+4,"D",12)}`);
+    s+=`<circle cx="${ball.x}" cy="${ball.y}" r="7" fill="#ffd35a" stroke="#222" stroke-width="1.5"/>`;
+    svg.innerHTML=s;
+  }
+  function reset(){D=[{x:C-14,y:C},{x:C+14,y:C}];holder=0;ball={...P[0]};flight=null;score=0;passes=0;clock=3;upd();draw()}
+  function upd(){document.getElementById("rScore").textContent=score;document.getElementById("rPasses").textContent=passes}
+  function end(why){running=false;cancelAnimationFrame(raf);LG.sad();
+    if(score>best){best=score;LG.store.set("sc-rondo",best);document.getElementById("rondoBest").textContent=best;LG.fanfare();LG.confetti(30)}
+    msg(`<b class="big">${why}</b>You scored <b>${score}</b> points with ${passes} passes. Best: ${best}.`);
+    const b=document.getElementById("rStart");b.hidden=false;b.textContent="Play again";draw()}
+  function tick(now){
+    const dt=Math.min(.05,(now-last)/1000);last=now;
+    const spd=62+passes*4;
+    const h=P[holder];
+    // D0 presses the holder; D1 blocks the most open lane
+    const t0={x:h.x+(C-h.x)*.22,y:h.y+(C-h.y)*.22};
+    let bestLane=null,bo=-1;P.forEach((p,i)=>{if(i===holder)return;const o=segDist(D[0],h,p);if(o>bo){bo=o;bestLane=p}});
+    const t1={x:h.x+(bestLane.x-h.x)*.5,y:h.y+(bestLane.y-h.y)*.5};
+    [[D[0],flight?{x:ball.x,y:ball.y}:t0],[D[1],flight?{x:ball.x,y:ball.y}:t1]].forEach(([d,t])=>{const dx=t.x-d.x,dy=t.y-d.y,L=Math.hypot(dx,dy);if(L>1){const m=Math.min(L,spd*dt);d.x+=dx/L*m;d.y+=dy/L*m}});
+    if(flight){
+      flight.t+=dt;const f=Math.min(1,flight.t/flight.dur);
+      ball.x=flight.a.x+(flight.b.x-flight.a.x)*f;ball.y=flight.a.y+(flight.b.y-flight.a.y)*f;
+      if(D.some(d=>Math.hypot(d.x-ball.x,d.y-ball.y)<17))return end("Intercepted!");
+      if(f>=1){holder=flight.to;passes++;score+=flight.split?3:1;upd();LG.tone(flight.split?880:660,.05);
+        if(flight.split){LG.banner("Split pass!","+3");LG.happy()}
+        msg(passes%5===0?`<b class="big">${passes} in a row!</b>The defenders are getting faster...`:`<b class="big">Nice pass!</b>Who's open next? Look for the green lane.`);
+        flight=null;clock=3}
+    }else{
+      clock-=dt;if(clock<=0)return end("Too slow!");
+    }
+    const cb=document.getElementById("rClock");cb.firstElementChild.style.width=(flight?100:clock/3*100)+"%";cb.classList.toggle("late",!flight&&clock<1);
+    draw();raf=requestAnimationFrame(tick);
+  }
+  svg.addEventListener("click",e=>{
+    const g=e.target.closest("[data-p]");if(!g||!running||flight)return;
+    const to=+g.dataset.p;if(to===holder)return;LG.click();
+    const a={...P[holder]},b={...P[to]},L=Math.hypot(b.x-a.x,b.y-a.y);
+    flight={a,b,to,t:0,dur:L/290,split:cross(a,b,D[0],D[1])};
+  });
+  document.getElementById("rStart").onclick=e=>{reset();running=true;e.target.hidden=true;msg(`<b class="big">Go!</b>Tap a teammate to pass. Green lanes are open.`);last=performance.now();raf=requestAnimationFrame(tick)};
+  reset();
+})();
+
+/* ---------- 6. Match simulator ---------- */
+const M={attack:1,goals:0,scans:0,tot:LG.store.get("sc-goals",0),phase:"idle",fog:false,raf:0};
+document.getElementById("goalCount").textContent=M.tot;
+const simSvg=document.getElementById("simSvg");
+const AWAY0=[[12,13],[25,11],[38,13],[18,25],[32,25],[10,37],[25,39],[40,37]];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function segInfo(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,L=dx*dx+dy*dy||1;const t=((p.x-a.x)*dx+(p.y-a.y)*dy)/L;const tc=clamp(t,0,1);return{t,d:Math.hypot(p.x-a.x-tc*dx,p.y-a.y-tc*dy)}}
+const msg=h=>document.getElementById("msg").innerHTML=h;
+const controls=h=>document.getElementById("controls").innerHTML=h;
+
+function homeTargets(ball,carrier){
+  const adv=clamp((60-ball.y)*.8,0,32),sh=(ball.x-25)*.25;
+  const runner=1+Math.floor(Math.random()*8);
+  return HOME.map((p,i)=>{
+    if(i===carrier)return null;
+    if(i===0)return{x:25+(ball.x-25)*.15,y:71-adv*.25};
+    let x=p[2]+sh+(Math.random()*6-3),y=p[3]-adv+(Math.random()*6-3);
+    if(i===runner&&ball.y<55)y-=8+Math.random()*4;
+    return{x:clamp(x,3,47),y:clamp(y,4,72)};
+  });
+}
+function awayTargets(ball,home,carrier){
+  const sh=(ball.x-25)*.4,dy=clamp((ball.y-40)*.35,-8,12);
+  const base=AWAY0.map(([x,y],i)=>({x:clamp(x+sh,3,47),y:clamp(y+dy,i<3?4:7,60)}));
+  const taken=new Set([carrier,0]);
+  const out=base.map(b=>{
+    let bi=-1,bd=13;home.forEach((h,i)=>{if(taken.has(i))return;const d=dist(b,h);if(d<bd){bd=d;bi=i}});
+    if(bi<0)return b;taken.add(bi);const h=home[bi];
+    const mark={x:h.x+(25-h.x)*.12,y:h.y-2.5};
+    return{x:b.x*.35+mark.x*.65+(Math.random()*2-1),y:b.y*.35+mark.y*.65+(Math.random()*2-1)};
+  });
+  return out;
+}
+function setTargets(list,targets){list.forEach((p,i)=>{if(targets[i]){p.tx=targets[i].x;p.ty=targets[i].y}})}
+function offsideLine(){const ys=[...M.away.map(a=>a.y),M.gk.y].sort((a,b)=>a-b);return ys[1]}
+function isOff(i){if(i===M.carrier)return false;const h=M.home[i];return h.y<37.5&&h.y<offsideLine()-.4&&h.y<M.ball.y-.4}
+function passOdds(i){
+  const a=M.home[M.carrier],b=M.home[i],L=dist(a,b);let p=1;
+  [...M.away,M.gk].forEach(d=>{const s=segInfo(d,a,b);if(s.t<.06||s.t>1.08)return;p*=1-(s.d<1.6?.85:s.d<3?.45:s.d<5?.14:0)});
+  if(L>28)p*=.82;if(L>38)p*=.8;return p;
+}
+function shotOdds(){
+  const c=M.home[M.carrier],D=Math.hypot(c.x-25,c.y);let p=D<9?.7:D<15?.5:D<22?.3:.12;
+  p*=1-clamp(Math.abs(c.x-25)/Math.max(D,1)-.35,0,.6);
+  M.away.forEach(d=>{const s=segInfo(d,c,{x:25,y:0});if(s.t>.05&&s.t<1&&s.d<1.8)p*=.5});
+  return p;
+}
+function inFog(p){return M.fog&&p.y<M.home[M.carrier].y-1.5}
+
+function draw(){
+  const c=M.home[M.carrier];
+  let s=pitchSVG();
+  if(M.phase==="onball"&&!M.fog){const ol=offsideLine();if(ol<37.5)s+=`<line x1="0" y1="${ol*S}" x2="300" y2="${ol*S}" stroke="#ffd35a" stroke-width="1.5" stroke-dasharray="3 6" opacity=".7"/>`}
+  M.away.forEach(d=>{if(!inFog(d))s+=`<circle cx="${d.x*S}" cy="${d.y*S}" r="10" fill="#2f6fd6" stroke="#fff" stroke-width="2"/>`});
+  s+=`<circle cx="${M.gk.x*S}" cy="${M.gk.y*S}" r="10" fill="#7a3fd6" stroke="#fff" stroke-width="2"/>${lbl(M.gk.x*S,M.gk.y*S+3.5,"GK",8)}`;
+  M.home.forEach((h,i)=>{
+    const fog=inFog(h),me=i===M.carrier;let ring="";
+    if(M.phase==="onball"&&!me&&!fog){if(isOff(i))ring=`<text x="${h.x*S+12}" y="${h.y*S-8}" font-size="14">🚩</text>`;else{const p=passOdds(i);ring=`<circle cx="${h.x*S}" cy="${h.y*S}" r="15" fill="none" stroke="${p>=.75?"#5cff8a":p>=.45?"#ffd35a":"#ff5d6c"}" stroke-width="3.5"/>`}}
+    s+=`<g data-h="${i}" style="cursor:pointer" opacity="${fog?.45:1}"><circle cx="${h.x*S}" cy="${h.y*S}" r="20" fill="transparent"/>${ring}<circle cx="${h.x*S}" cy="${h.y*S}" r="11" fill="${i?"#e4572e":"#f2b134"}" stroke="${me?"#ffd35a":"#fff"}" stroke-width="${me?3.5:2}"/>${lbl(h.x*S,h.y*S+3.5,HOME[i][1],8)}</g>`;
+  });
+  if(M.fog){const fy=(c.y-1.5)*S;s+=`<rect x="-6" y="-12" width="312" height="${fy+12}" fill="rgba(8,18,32,.78)" pointer-events="none"/><text pointer-events="none" x="150" y="${Math.max(30,fy/2)}" text-anchor="middle" fill="#fff" font-family="Fredoka" font-weight="600" font-size="15">You didn't scan! 👀</text><text x="150" y="${Math.max(30,fy/2)+20}" text-anchor="middle" fill="#fff" font-family="Fredoka" font-size="12" opacity=".85" pointer-events="none">What's in front of you is a mystery.</text>`}
+  s+=`<circle cx="${M.ball.x*S}" cy="${M.ball.y*S}" r="5.5" fill="#ffd35a" stroke="#222" stroke-width="1.5"/>`;
+  simSvg.innerHTML=s;
+}
+function loop(now){
+  const dt=Math.min(.05,(now-(M.last||now))/1000);M.last=now;
+  const k=Math.min(1,dt*3.2);
+  [...M.home,...M.away].forEach((p,i)=>{if(p.tx!=null&&!(p===M.presser&&M.phase==="onball")){p.x+=(p.tx-p.x)*k;p.y+=(p.ty-p.y)*k}});
+  M.gk.x+=(25+(M.ball.x-25)*.18-M.gk.x)*k;
+  if(M.flight){const f=M.flight;f.t+=dt;const r=Math.min(1,f.t/f.dur);M.ball.x=f.a.x+(f.b.x-f.a.x)*r;M.ball.y=f.a.y+(f.b.y-f.a.y)*r;if(r>=1){M.flight=null;f.done()}}
+  if(M.carryAnim){const f=M.carryAnim;f.t+=dt;const r=Math.min(1,f.t/f.dur);const c=M.home[M.carrier];c.x=f.a.x+(f.b.x-f.a.x)*r;c.y=f.a.y+(f.b.y-f.a.y)*r;c.tx=c.x;c.ty=c.y;M.ball.x=c.x;M.ball.y=c.y-.8;if(r>=1){M.carryAnim=null;f.done()}}
+  if(M.phase==="onball"){
+    M.clock-=dt;const c=M.home[M.carrier],P=M.presser,f=clamp(1-M.clock/M.clockMax,0,1);
+    const goal={x:c.x+(P.sx-c.x>0?1:-1)*.6,y:c.y-1.2};P.x=P.sx+(goal.x-P.sx)*f;P.y=P.sy+(goal.y-P.sy)*f;
+    const fill=document.getElementById("clockfill");fill.style.width=clamp(M.clock/M.clockMax,0,1)*100+"%";document.getElementById("clockbar").classList.toggle("late",M.clock<1.2);
+    if(M.clock<=0){turnover("tackle");}
+  }
+  draw();M.raf=requestAnimationFrame(loop);
+}
+function onBall(scanned,time){
+  M.phase="onball";M.fog=!scanned;
+  const c=M.home[M.carrier];
+  let pi=0,pd=1e9;M.away.forEach((d,i)=>{const dd=dist(d,c);if(dd<pd){pd=dd;pi=i}});
+  M.presser=M.away[pi];M.presser.sx=M.presser.x;M.presser.sy=M.presser.y;
+  M.clockMax=M.clock=time*(pd>9?1.25:1);
+  renderControls();
+}
+function renderControls(){
+  const c=M.home[M.carrier],canShoot=c.y<=30&&M.carrier!==0;
+  controls(`<div class="acts">
+    <button type="button" id="aDrib">Dribble ⬆<small>Run at the defense</small></button>
+    <button type="button" id="aShoot" class="primary" ${canShoot?"":"disabled"}>Shoot! ⚽<small>${canShoot?"Chance: "+Math.round(shotOdds()*100)+"%":"Get closer first"}</small></button>
+    ${M.fog?`<button type="button" id="aLook" style="grid-column:1/-1">👀 Look now<small>Costs time: the defender gets closer!</small></button>`:""}
+  </div><p class="muted" style="color:var(--fg);opacity:.85;margin:0">Or tap a teammate to pass. <b style="color:#5cff8a">Green</b> ring = open, <b style="color:#ffd35a">yellow</b> = risky, <b style="color:#ff5d6c">red</b> = defender in the lane.</p>`);
+  document.getElementById("aDrib").onclick=dribble;
+  document.getElementById("aShoot").onclick=shoot;
+  const lk=document.getElementById("aLook");if(lk)lk.onclick=()=>{LG.click();M.fog=false;M.clock=Math.max(.4,M.clock-1.3);msg(`<b class="big">Looked up!</b>Now you can see. But scanning <i>after</i> you get the ball costs time. Scan before it arrives!`);renderControls()};
+}
+function startAttack(){
+  M.phase="moving";M.carrier=0;M.flight=null;M.carryAnim=null;
+  M.home=HOME.map(p=>({x:p[2],y:p[3],tx:p[2],ty:p[3]}));
+  M.ball={x:25,y:70};M.gk={x:25,y:1.5};
+  M.away=awayTargets(M.ball,M.home,0).map(t=>({x:t.x,y:t.y-3,tx:t.x,ty:t.y}));
+  document.getElementById("atkChip").textContent=M.attack;
+  msg(`<b class="big">Attack ${M.attack}</b>Your keeper has the ball. Build out from the back: find an open defender or midfielder.`);
+  onBall(true,6);
+}
+simSvg.addEventListener("click",e=>{
+  const g=e.target.closest("[data-h]");if(!g||M.phase!=="onball")return;
+  const i=+g.dataset.h;if(i===M.carrier)return;LG.click();pass(i);
+});
+function pass(i){
+  const a={x:M.ball.x,y:M.ball.y},recv=M.home[i],off=isOff(i),odds=passOdds(i);
+  M.phase="flight";M.fog=false;M.scanned=false;
+  const L=dist(a,recv),dur=Math.max(.55,L*.036);
+  const ok=!off&&Math.random()<odds;
+  // everyone moves for the next moment while the ball travels
+  const nt=homeTargets(recv,i);setTargets(M.home,nt);recv.tx=recv.x;recv.ty=recv.y;
+  setTargets(M.away,awayTargets(recv,M.home.map((h,k)=>k===i?h:{x:nt[k]?nt[k].x:h.x,y:nt[k]?nt[k].y:h.y}),i));
+  let b={x:recv.x,y:recv.y},thief=null;
+  if(!ok&&!off){let bd=1e9;M.away.forEach(d=>{const s=segInfo(d,a,recv);if(s.t>.05&&s.t<1.05&&s.d<bd){bd=s.d;thief=d}});
+    if(thief&&bd<6){const s=segInfo(thief,a,recv);const t=clamp(s.t,.1,1);b={x:a.x+(recv.x-a.x)*t,y:a.y+(recv.y-a.y)*t};thief.tx=b.x;thief.ty=b.y}else{b={x:recv.x+(Math.random()*8-4),y:recv.y-6};thief=null}}
+  msg(i===M.carrier?"":`<b class="big">Pass to the ${HOME[i][4].toLowerCase()}!</b>Quick, SCAN before it arrives!`);
+  controls(`<button type="button" class="scan" id="scanBtn">👀 SCAN!</button>`);
+  const sb=document.getElementById("scanBtn");sb.onclick=()=>{if(M.scanned)return;M.scanned=true;M.scans++;document.getElementById("mScans").textContent=M.scans;LG.tone(990,.05);sb.textContent="✅ Scanned!";sb.classList.remove("scan");sb.disabled=true};
+  M.flight={a,b,t:0,dur,done:()=>{
+    if(off)return turnover("offside");
+    if(!ok)return turnover(thief?"int":"miss");
+    M.carrier=i;
+    if(M.scanned)msg(`<b class="big">Great scan!</b>You know where everyone is, and you've got extra time. ${recv.y<=30&&i?"You're in shooting range!":"Keep going forward."}`);
+    else msg(`<b class="big">Got it, but...</b>You didn't scan, so you can't see what's ahead and a defender is closing fast!`);
+    onBall(M.scanned,M.scanned?5:2.8);
+  }};
+}
+function dribble(){
+  if(M.phase!=="onball")return;LG.click();
+  const c=M.home[M.carrier];let nd=1e9;M.away.forEach(d=>nd=Math.min(nd,dist(d,c)));
+  const odds=nd>8?.95:nd>4?.7:.45,ok=Math.random()<odds;
+  const b={x:clamp(c.x+(25-c.x)*.15,3,47),y:clamp(c.y-7,3,72)};
+  M.phase="moving";M.fog=false;
+  const nt=homeTargets(b,M.carrier);setTargets(M.home,nt);setTargets(M.away,awayTargets(b,M.home,M.carrier));
+  if(ok&&M.presser){M.presser.tx=M.presser.x+(Math.random()*4-2);M.presser.ty=c.y+3}
+  controls("");msg(`<b class="big">Dribbling...</b>Small touches, head up!`);
+  M.carryAnim={a:{x:c.x,y:c.y},b:ok?b:{x:c.x+(b.x-c.x)*.4,y:c.y+(b.y-c.y)*.4},t:0,dur:.65,done:()=>{
+    if(!ok)return turnover("tackle");
+    LG.tone(600,.05);msg(`<b class="big">Beat your defender!</b>Now look for the next pass or shot.`);onBall(true,4)}};
+}
+function shoot(){
+  if(M.phase!=="onball")return;
+  const c=M.home[M.carrier],p=shotOdds(),r=Math.random();M.phase="flight";controls("");
+  const goal=r<p,wide=!goal&&Math.random()<.45;
+  const tx=goal?25+(Math.random()<.5?-1:1)*(1.5+Math.random()*1.8):wide?25+(Math.random()<.5?-1:1)*(4.5+Math.random()*3):M.gk.x;
+  msg(`<b class="big">Shot!</b>`);LG.tone(300,.06,"square",.08);
+  M.flight={a:{x:c.x,y:c.y},b:{x:tx,y:goal?-1:wide?-1.5:1.6},t:0,dur:.55,done:()=>{
+    if(goal){M.goals++;M.tot++;LG.store.set("sc-goals",M.tot);document.getElementById("goalCount").textContent=M.tot;document.getElementById("mGoals").textContent=M.goals;
+      LG.fanfare();LG.confetti(50,["#e4572e","#fff","#ffd35a"]);LG.banner("GOOOAL!",Math.round(p*100)+"% chance, and you buried it");
+      return after(`<b class="big">GOAL!</b>${c.y<15?"Getting close to goal made that a great chance.":"What a strike!"}`)}
+    LG.sad();after(wide?`<b class="big">Just wide!</b>Aim for the low corners. Shots from closer in and from the middle have better odds.`:`<b class="big">Saved!</b>The keeper got it. Try to get closer, or pass to someone with a clearer shot.`);
+  }};
+}
+function turnover(how){
+  M.phase="done";M.fog=false;LG.sad();
+  const t={tackle:["Tackled!","The defender won the ball. Pass sooner, dribble into open space, or scan earlier to get more time."],
+    int:["Intercepted!","A defender was in the passing lane. Look for green rings: they mean the lane is clear."],
+    miss:["Pass went astray.","Long passes are harder. Shorter passes to open teammates are safer."],
+    offside:["Offside! 🚩","Your teammate was past the second-to-last defender when you passed. Free kick to the other team. Pass to someone level or behind that yellow line."]}[how];
+  after(`<b class="big">${t[0]}</b>${t[1]}`);
+}
+function after(h){
+  M.phase="done";msg(h);
+  if(M.attack>=8){
+    const best=Math.max(LG.store.get("sc-best",0),M.goals);LG.store.set("sc-best",best);
+    controls(`<div class="msg"><b class="big">Full time! ${M.goals} goal${M.goals===1?"":"s"}</b>You scanned ${M.scans} time${M.scans===1?"":"s"}. Best match: ${best} goals.</div><button type="button" class="primary big" id="again">New match</button>`);
+    document.getElementById("again").onclick=()=>{LG.click();M.attack=1;M.goals=0;M.scans=0;document.getElementById("mGoals").textContent=0;document.getElementById("mScans").textContent=0;startAttack()};
+    if(M.goals>=3){LG.confetti(60)}
+  }else{
+    controls(`<button type="button" class="primary big" id="next">Next attack</button>`);
+    document.getElementById("next").onclick=()=>{LG.click();M.attack++;startAttack()};
+  }
+}
+function startMatch(){if(M.home)return;startAttack();M.raf=requestAnimationFrame(loop)}
+
+/* ---------- 7. Quiz ---------- */
+LG.quiz(document.getElementById("quizBox"),[
+  {q:"How many players does each team have on the field in a 9v9 game?",c:["9, including the goalkeeper","11","9 plus a goalkeeper (10)","7"],why:"9v9 means 8 field players and 1 goalkeeper per team."},
+  {q:"The ball rolls completely over the sideline. What happens?",c:["Throw-in for the team that didn't touch it last","Corner kick","Goal kick","Free kick"],why:"Sideline (touchline) = throw-in, taken with both hands from behind the head, both feet on the ground."},
+  {q:"A defender kicks the ball over their own goal line (not in the goal). What's the restart?",c:["Corner kick for the attackers","Goal kick","Throw-in","Penalty kick"],why:"If the defending team touched it last over their own goal line, the attackers get a corner kick."},
+  {q:"Who can use their hands?",c:["Only the goalkeeper, inside their own penalty area","Anyone on a throw-in or in the box","The captain","Nobody, ever"],why:"Only the keeper, and only inside their own penalty area. (Everyone uses hands for throw-ins, though!)"},
+  {q:"What is 'scanning'?",c:["Looking over your shoulder before you get the ball","Watching the ball the whole time","Checking the scoreboard","Reading the coach's notes"],why:"Pros scan before the ball arrives so they already know where defenders and teammates are."},
+  {q:"Can you be offside in your own half?",c:["No, never","Yes, always","Only on corner kicks","Only in the second half"],why:"Offside only counts in the other team's half."},
+  {q:"Can you be offside straight from a throw-in?",c:["No","Yes","Only if it's a long throw","Only for goalkeepers"],why:"There's no offside from a throw-in, goal kick or corner kick."},
+  {q:"What's a rondo?",c:["A keep-away passing game in a circle","A type of shot","A goalkeeper's dive","A yellow card"],why:"Passers on the outside, defenders in the middle. Clubs like Barcelona made it famous."},
+  {q:"Which part of your foot is best for a short, accurate pass?",c:["The inside of your foot","Your toe","Your heel","The bottom of your foot"],why:"The inside of the foot has the biggest, flattest surface: the most control."},
+  {q:"Where should you aim to make a shot hardest to save?",c:["The low corners","Right at the keeper","The middle of the crossbar","High over the goal"],why:"Low corners are the farthest for a keeper to dive."},
+  {q:"Under U.S. Soccer rules, what's the heading rule for players 11 and under?",c:["No heading in games or practice","Heading only on corners","Unlimited heading","Heading only by defenders"],why:"No heading at 11 and under, to protect young brains."},
+  {q:"What does a teammate mean when they shout \"Man on!\"?",c:["A defender is right behind you","You're wide open","Pass back to the keeper","Time for a sub"],why:"\"Man on!\" warns you pressure is coming. \"Time!\" means you're free."},
+  {q:"Under the newest laws, what happens if a goal kick takes too long after the referee's 5-second countdown?",c:["The other team gets a corner kick","Nothing","The goal kick is retaken","A penalty kick"],why:"New for 2026/27: a delayed goal kick turns into a corner for the opponents."},
+  {q:"What does 'defend goal-side' mean?",c:["Stay between your opponent and your goal","Stand inside your own goal","Stay near the other team's goal","Always tackle right away"],why:"Being goal-side means the attacker has to get past you to reach your goal."},
+  {q:"In a 1-3-2-3 formation, how many forwards are there?",c:["3","2","1","4"],why:"1 keeper, 3 defenders, 2 midfielders, 3 forwards (2 wingers and a striker)."},
+  {q:"What does U.S. Soccer's Play-Practice-Play mean?",c:["Practice starts and ends with games, with a skill activity in the middle","Run laps, then play","Only scrimmage","Watch videos, then play"],why:"Play first, practice one focus, then play a big game: lots of touches, less standing in lines."}
+],{key:"soccer",count:10});
+
+LG.tabs("soccer",id=>{if(id==="match")startMatch()});
+</script>
+</body>
+</html>
